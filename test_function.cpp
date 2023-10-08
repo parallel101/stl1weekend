@@ -20,9 +20,8 @@ void repeattwice(Function<void(int)> const &func) {
 }
 
 int main() {
-    int x;
-    int y;
-    std::cin >> x >> y;
+    int x = 4;
+    int y = 2;
     repeattwice([=] (int i) {
         printf("#%d Numbers are: %d, %d\n", i, x, y);
     });

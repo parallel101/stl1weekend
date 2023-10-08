@@ -41,8 +41,8 @@ private:
 public:
     Function() = default; // m_base 初始化为 nullptr
 
-    // 此处 enable_if_t 的作用：1. 阻止 Function 从不可调用的对象中初始化；2. 阻止拷贝构造 Function(Function const &) 也不慎落入这个重载
-    template <class F, class = std::enable_if_t<std::is_invocable_r_v<Ret, F, Args...> && !std::is_same_v<std::decay_t<F>, Function>>>
+    // 此处 enable_if_t 的作用：阻止 Function 从不可调用的对象中初始化
+    template <class F, class = std::enable_if_t<std::is_invocable_r_v<Ret, F &, Args...>>>
     Function(F f) // 没有 explicit，允许 lambda 表达式隐式转换成 Function
     : m_base(std::make_shared<FuncImpl<F>>(std::move(f)))
     {}
