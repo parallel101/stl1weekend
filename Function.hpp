@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <utility>
+#include <stdexcept>
 #include <memory>
 #include <type_traits>
 #include <functional>
@@ -13,6 +14,7 @@ struct Function {
 
 template <class Ret, class ...Args>
 struct Function<Ret(Args...)> {
+private:
     struct FuncBase {
         virtual Ret call(Args ...args) = 0;
         virtual ~FuncBase() = default;
@@ -31,6 +33,7 @@ struct Function<Ret(Args...)> {
 
     std::shared_ptr<FuncBase> m_base;
 
+public:
     Function() = default;
 
     template <class F, class = std::enable_if_t<std::is_invocable_r_v<Ret, F, Args...> && !std::is_same_v<std::decay_t<F>, Function>>>
