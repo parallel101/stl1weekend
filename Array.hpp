@@ -81,6 +81,10 @@ struct Array {
         return _M_elements[_N - 1];
     }
 
+    static constexpr bool empty() noexcept {
+        return false;
+    }
+
     static constexpr size_t size() noexcept {
         return _N;
     }
@@ -198,6 +202,10 @@ struct Array<_Tp, 0> {
 
     _Tp const &back() const noexcept {
         _LIBPENGCXX_UNREACHABLE();
+    }
+
+    static constexpr bool empty() noexcept {
+        return true;
     }
 
     static constexpr size_t size() noexcept {

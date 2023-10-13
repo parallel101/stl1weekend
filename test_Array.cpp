@@ -29,7 +29,6 @@
 
 template <class T, size_t N>
 void iota(Array<T, N> &a) noexcept {
-    a.swap(a);
     T count = 0;
     // for (auto it = a.begin(), eit = a.end(); it != eit; ++it)
     for (auto &ai: a) {
