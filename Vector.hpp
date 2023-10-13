@@ -42,7 +42,7 @@ struct Vector {
         m_data = m_alloc.allocate(n);
         m_cap = m_size = n;
         for (size_t i = 0; i != n; i++) {
-            std::construct_at(&m_data[i]);
+            std::construct_at(&m_data[i]); // m_data[i] = 0
         }
     }
 
@@ -50,7 +50,7 @@ struct Vector {
         m_data = m_alloc.allocate(n);
         m_cap = m_size = n;
         for (size_t i = 0; i != n; i++) {
-            std::construct_at(&m_data[i], val);
+            std::construct_at(&m_data[i], val); // m_data[i] = val
         }
     }
 
@@ -217,7 +217,7 @@ struct Vector {
         std::swap(m_alloc, that.m_alloc);
     }
 
-    Vector(Vector const &that) : m_alloc(that.alloc) {
+    Vector(Vector const &that) : m_alloc(that.m_alloc) {
         m_cap = m_size = that.m_size;
         if (m_size != 0) {
             m_data = m_alloc.allocate(m_size);
