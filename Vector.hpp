@@ -197,7 +197,7 @@ struct Vector {
     }
 
     Vector &operator=(Vector &&that) noexcept {
-        if (&that == this) [[likely]] return *this;
+        if (&that == this) [[unlikely]] return *this;
         if (m_cap != 0) {
             m_alloc.deallocate(m_data, m_cap);
         }
@@ -242,13 +242,11 @@ struct Vector {
     }
 
     Vector &operator=(Vector const &that) {
-        if (&that == this) [[likely]] return *this;
+        if (&that == this) [[unlikely]] return *this;
         reserve(that.m_size);
         m_size = that.m_size;
-        if (m_size != 0) {
-            for (size_t i = 0; i != m_size; i++) {
-                std::construct_at(&m_data[i], std::as_const(that.m_data[i]));
-            }
+        for (size_t i = 0; i != m_size; i++) {
+            std::construct_at(&m_data[i], std::as_const(that.m_data[i]));
         }
         return *this;
     }
