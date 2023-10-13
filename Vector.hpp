@@ -178,7 +178,16 @@ struct Vector {
         return m_data[i];
     }
 
-    Vector(Vector &&that) noexcept {
+    Vector(Vector &&that) noexcept : m_alloc(std::move(that.m_alloc)) {
+        m_data = that.m_data;
+        m_size = that.m_size;
+        m_cap = that.m_cap;
+        that.m_data = nullptr;
+        that.m_size = 0;
+        that.m_cap = 0;
+    }
+
+    Vector(Vector &&that, Alloc const &alloc) noexcept : m_alloc(alloc) {
         m_data = that.m_data;
         m_size = that.m_size;
         m_cap = that.m_cap;
@@ -205,9 +214,22 @@ struct Vector {
         std::swap(m_data, that.m_data);
         std::swap(m_size, that.m_size);
         std::swap(m_cap, that.m_cap);
+        std::swap(m_alloc, that.m_alloc);
     }
 
-    Vector(Vector const &that) {
+    Vector(Vector const &that) : m_alloc(that.alloc) {
+        m_cap = m_size = that.m_size;
+        if (m_size != 0) {
+            m_data = m_alloc.allocate(m_size);
+            for (size_t i = 0; i != m_size; i++) {
+                std::construct_at(&m_data[i], std::as_const(that.m_data[i]));
+            }
+        } else {
+            m_data = nullptr;
+        }
+    }
+
+    Vector(Vector const &that, Alloc const &alloc) : m_alloc(alloc) {
         m_cap = m_size = that.m_size;
         if (m_size != 0) {
             m_data = m_alloc.allocate(m_size);
@@ -377,6 +399,10 @@ struct Vector {
     }
 
     void assign(std::initializer_list<T> ilist) {
+        assign(ilist.begin(), ilist.end());
+    }
+
+    Vector &operator=(std::initializer_list<T> ilist) {
         assign(ilist.begin(), ilist.end());
     }
 
