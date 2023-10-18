@@ -198,6 +198,9 @@ struct Vector {
 
     Vector &operator=(Vector &&that) noexcept {
         if (&that == this) [[unlikely]] return *this;
+        for (size_t i = 0; i != m_size; i++) {
+            std::destroy_at(&m_data[i]);
+        }
         if (m_cap != 0) {
             m_alloc.deallocate(m_data, m_cap);
         }
@@ -325,27 +328,27 @@ struct Vector {
     }
 
     std::reverse_iterator<T *> rbegin() noexcept {
-        return std::make_reverse_iterator(m_data);
+        return std::make_reverse_iterator(m_data + m_size);
     }
 
     std::reverse_iterator<T *> rend() noexcept {
-        return std::make_reverse_iterator(m_data + m_size);
+        return std::make_reverse_iterator(m_data);
     }
 
     std::reverse_iterator<T const *> rbegin() const noexcept {
-        return std::make_reverse_iterator(m_data);
+        return std::make_reverse_iterator(m_data + m_size);
     }
 
     std::reverse_iterator<T const *> rend() const noexcept {
-        return std::make_reverse_iterator(m_data + m_size);
-    }
-
-    std::reverse_iterator<T const *> crbegin() const noexcept {
         return std::make_reverse_iterator(m_data);
     }
 
-    std::reverse_iterator<T const *> crend() const noexcept {
+    std::reverse_iterator<T const *> crbegin() const noexcept {
         return std::make_reverse_iterator(m_data + m_size);
+    }
+
+    std::reverse_iterator<T const *> crend() const noexcept {
+        return std::make_reverse_iterator(m_data);
     }
 
     void pop_back() noexcept {
@@ -484,6 +487,9 @@ struct Vector {
     }
 
     ~Vector() noexcept {
+        for (size_t i = 0; i != m_size; i++) {
+            std::destroy_at(&m_data[i]);
+        }
         if (m_cap != 0) {
             m_alloc.deallocate(m_data, m_cap);
         }
