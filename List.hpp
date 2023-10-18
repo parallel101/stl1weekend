@@ -600,4 +600,12 @@ public:
     Alloc get_allocator() const {
         return m_alloc;
     }
+
+    bool operator==(List const &that) noexcept {
+        return std::equal(begin(), end(), that.begin(), that.end());
+    }
+
+    auto operator<=>(List const &that) noexcept {
+        return std::lexicographical_compare_three_way(begin(), end(), that.begin(), that.end());
+    }
 };
