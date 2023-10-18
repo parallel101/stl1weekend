@@ -214,7 +214,7 @@ private:
 
 public:
     size_t size() const noexcept {
-        return std::distance(cbegin(), cend());
+        return m_size;
     }
 
     static constexpr size_t max_size() noexcept {
