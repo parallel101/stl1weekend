@@ -492,7 +492,6 @@ public:
     iterator erase(const_iterator first, const_iterator last) noexcept {
         while (first != last) {
             first = erase(first);
-            --m_size;
         }
         return iterator(first);
     }
