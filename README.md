@@ -56,9 +56,11 @@
 
 ## 第六课：Optional
 
-视频链接：[BV___](https://www.bilibili.com/video/BV___)
+视频链接：[BV1v6421Z7f8](https://www.bilibili.com/video/BV1v6421Z7f8)
 
 相关文件：
 
 - [Optional.hpp](Optional.hpp)
 - [test_Optional.cpp](test_Optional.cpp)
+
+小彭老师C++实战演练系列之“自己实现所有STL容器”。比起艰深的STL源码解读，不如自己动手实现STL，更能生动直观地掌握底层技术细节，破除模棱两可心理，了解常见的最佳实践。这是本系列试水的第六课，自己实现std::optional可选值容器。本期视频中我们介绍了如何借助tag类、union惰性初始化、万能引用、完美转发等技巧，实现一个可以存放任意类型的可选值容器。最终借助所学知识，封装出了和标准库一样的可选值容器std::optional，完美支持存放任意类型的值，同时支持为空。in_place和nullopt等tag类重载构造函数的妙用真是醍醐灌顶，我们不仅实现了value、value_or、emplace、*和->运算符，还实现了C++23新增的transform、and_then、or_else，彻底迈向函数式！介绍了C++17的CTAD机制，感受if-auto语法的简洁有力。最终，还顺便介绍了名字空间的ADL机制如何帮助多态，并实现了自适配swap。且C++14就能编译，如果你的编译器无法升级到C++17，可以集成小彭老师的Optional类，直奔C++23。

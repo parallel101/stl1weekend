@@ -72,6 +72,7 @@ struct C {
 };
 
 void swap(C &c1, C &c2) {
+    (void)c1, (void)c2;
     printf("swap(C &, C &)\n");
 }
 }

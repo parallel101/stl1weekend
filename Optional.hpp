@@ -27,12 +27,15 @@ inline constexpr InPlace inPlace;
 
 template <class T>
 struct Optional {
+private:
     bool m_has_value;
     union {
         T m_value;
     };
 
+public:
     Optional(T &&value) noexcept : m_has_value(true), m_value(std::move(value)) {}
+
     Optional(T const &value) noexcept : m_has_value(true), m_value(std::move(value)) {}
 
     Optional() noexcept : m_has_value(false) {}
