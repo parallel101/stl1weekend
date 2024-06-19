@@ -25,3 +25,40 @@
 - [test_UniquePtr.cpp](test_UniquePtr.cpp)
 
 小彭老师C++实战演练系列之“自己实现所有STL容器”。比起艰深的STL源码解读，不如自己动手实现STL，更能生动直观地掌握底层技术细节，破除模棱两可心理，了解常见的最佳实践。这是本系列试水的第二课，自己实现std::unique_ptr智能指针。本期视频中我们从封装C语言的FILE为内存安全的类的入手，介绍了现代C++如何借助RAII思想安全管理资源，避免内存泄漏，了解五大函数各自的作用。最终借助所学知识，实现了和标准库一样的独占型智能指针：std::unique_ptr。
+
+## 第三课：Array
+
+视频链接：[BV1Tw411k7QB](https://www.bilibili.com/video/BV1Tw411k7QB)
+
+相关文件：
+
+- [Array.hpp](Array.hpp)
+- [test_Array.cpp](test_Array.cpp)
+
+小彭老师C++实战演练系列之“自己实现所有STL容器”。比起艰深的STL源码解读，不如自己动手实现STL，更能生动直观地掌握底层技术细节，破除模棱两可心理，了解常见的最佳实践。这是本系列试水的第三课，自己实现std::array静态数组。本期视频中我们从封装C语言的原始数组为深拷贝的容器类入手，介绍了现代C++如何借助封装思想把底层细节隐藏起来，初步认识了迭代器的概念，同时科普了正经的标准库中为什么都是形如_Tp、__traits这种一堆下划线开头的变量名。最终借助所学知识，封装了和标准库一样的静态数组：std::array。
+
+## 第四课：Vector
+
+视频链接：[BV1V84y127Pi](https://www.bilibili.com/video/BV1V84y127Pi)
+
+小彭老师C++实战演练系列之“自己实现所有STL容器”。比起艰深的STL源码解读，不如自己动手实现STL，更能生动直观地掌握底层技术细节，破除模棱两可心理，了解常见的最佳实践。这是本系列试水的第四课，自己实现std::vector动态数组。本期视频中我们从封装C++98的new数组为深拷贝的容器类入手，介绍了现代C++如何借助RAII思想保障内存安全，初步认识了迭代器的概念，同时科普了size与capacity的区别，认识了push_back的底层原理。最终借助所学知识，封装了和标准库一样的动态数组：std::vector。
+
+## 第五课：List
+
+视频链接：[BV1SC4y1G7Ab](https://www.bilibili.com/video/BV1SC4y1G7Ab)
+
+相关文件：
+
+- [List.hpp](List.hpp)
+- [test_List.cpp](test_List.cpp)
+
+小彭老师C++实战演练系列之“自己实现所有STL容器”。比起艰深的STL源码解读，不如自己动手实现STL，更能生动直观地掌握底层技术细节，破除模棱两可心理，了解常见的最佳实践。这是本系列试水的第五课，自己实现std::list双向循环链表。本期视频中我们从封装经典的双向循环链表为C++容器类入手，介绍了如何借助一个假节点避免尾节点特殊判断的开销，并深入认识了迭代器的分类，自己动手实现了一款双向迭代器，同时科普了代码复用(DRY原则)的重要性。最终借助所学知识，封装出了和标准库一样的双向循环链表容器std::list，完美支持增删改查等操作。
+
+## 第六课：Optional
+
+视频链接：[BV___](https://www.bilibili.com/video/BV___)
+
+相关文件：
+
+- [Optional.hpp](Optional.hpp)
+- [test_Optional.cpp](test_Optional.cpp)
