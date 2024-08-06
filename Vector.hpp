@@ -12,7 +12,7 @@
 #define _LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(category, T) category T
 #else
 #define _LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(category, T) class T, \
-    std::enable_if_t<std::is_same_v< \
+    std::enable_if_t<std::is_convertible_v< \
         typename std::iterator_traits<T>::iterator_category, \
         category##_tag>>
 #endif
