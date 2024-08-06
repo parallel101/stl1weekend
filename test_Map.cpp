@@ -10,7 +10,7 @@ int main() {
     if (!table.contains("delay"))
         table["delay"] = 32;
     table["timeout"] = 42;
-    table._M_print();
+    // table._M_print();
     auto it = table.find("delay");
     while (it != table.end())
         std::cout << (it++)->second << '\n';

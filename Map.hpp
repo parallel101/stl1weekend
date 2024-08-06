@@ -19,130 +19,130 @@
 */
 
 #include <cassert>
-#include <iostream>
+// #include <iostream>
 #include <stdexcept>
 #include <type_traits>
 #include <iterator>
 #include <utility>
 
 #if __cpp_concepts && __cpp_lib_concepts
-#define _LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(category, T) category T
+#define _LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(__category, _Type) __category _Type
 #else
-#define _LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(category, T) class T, \
+#define _LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(__category, _Type) class _Type, \
     std::enable_if_t<std::is_convertible_v< \
-        typename std::iterator_traits<T>::iterator_category, \
-        category##_tag>>
+        typename std::iterator_traits<_Type>::iterator_category, \
+        __category##_tag>>
 #endif
-#define _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare) \
-    class Compare##Tp = Compare, \
-    class = typename Compare##Tp::is_transparent
+#define _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare) \
+    class _Compare##Tp = _Compare, \
+    class = typename _Compare##Tp::is_transparent
 
-enum TreeColor {
-    BLACK,
-    RED,
+enum _RbTreeColor {
+    _S_black,
+    _S_red,
 };
 
-enum TreeChildDir {
-    LEFT,
-    RIGHT,
+enum _RbTreeChildDir {
+    _S_left,
+    _S_right,
 };
 
-struct TreeNode {
-    TreeNode *left;     // 左子节点指针
-    TreeNode *right;    // 右子节点指针
-    TreeNode *parent;   // 父节点指针
-    TreeNode **pparent; // 父节点中指向本节点指针的指针
-    TreeColor color;    // 红或黑
+struct _RbTreeNode {
+    _RbTreeNode *_M_left;     // 左子节点指针
+    _RbTreeNode *_M_right;    // 右子节点指针
+    _RbTreeNode *_M_parent;   // 父节点指针
+    _RbTreeNode **_M_pparent; // 父节点中指向本节点指针的指针
+    _RbTreeColor _M_color;    // 红或黑
 };
 
-template <class T>
-struct TreeNodeImpl : TreeNode {
+template <class _T>
+struct _RbTreeNodeImpl : _RbTreeNode {
     union {
-        T value;
-    }; // union 可以阻止里面成员的自动初始化，方便不支持 T() 默认构造的类型
+        _T _M_value;
+    }; // union 可以阻止里面成员的自动初始化，方便不支持 _T() 默认构造的类型
 
-    TreeNodeImpl() noexcept {}
-    ~TreeNodeImpl() noexcept {}
+    _RbTreeNodeImpl() noexcept {}
+    ~_RbTreeNodeImpl() noexcept {}
 };
 
 template <bool kReverse>
-struct TreeIteratorBase;
+struct _RbTreeIteratorBase;
 
 template <>
-struct TreeIteratorBase<false> {
+struct _RbTreeIteratorBase<false> {
     union {
-        TreeNode *node;
-        TreeNode **proot;
+        _RbTreeNode *_M_node;
+        _RbTreeNode **_M_proot;
     };
-    bool offBy1;
+    bool _M_off_by_one;
 
-    TreeIteratorBase(TreeNode *node) noexcept : node(node), offBy1(false) {
+    _RbTreeIteratorBase(_RbTreeNode *__node) noexcept : _M_node(__node), _M_off_by_one(false) {
     }
 
-    TreeIteratorBase(TreeNode **proot) noexcept : proot(proot), offBy1(true) {}
+    _RbTreeIteratorBase(_RbTreeNode **__proot) noexcept : _M_proot(__proot), _M_off_by_one(true) {}
 
-    bool operator==(TreeIteratorBase const &that) const noexcept {
-        return (!offBy1 && !that.offBy1 && node == that.node) || (offBy1 && that.offBy1);
+    bool operator==(_RbTreeIteratorBase const &__that) const noexcept {
+        return (!_M_off_by_one && !__that._M_off_by_one && _M_node == __that._M_node) || (_M_off_by_one && __that._M_off_by_one);
     }
 
-    bool operator!=(TreeIteratorBase const &that) const noexcept {
-        return !(*this == that);
+    bool operator!=(_RbTreeIteratorBase const &__that) const noexcept {
+        return !(*this == __that);
     }
 
-    void operator++() noexcept {   // ++it
-        if (offBy1) {
-            offBy1 = false;
-            node = *proot;
-            assert(node);
-            while (node->left != nullptr) {
-                node = node->left;
+    void operator++() noexcept {   // ++__it
+        if (_M_off_by_one) {
+            _M_off_by_one = false;
+            _M_node = *_M_proot;
+            assert(_M_node);
+            while (_M_node->_M_left != nullptr) {
+                _M_node = _M_node->_M_left;
             }
             return;
         }
-        assert(node);
-        if (node->right != nullptr) {
-            node = node->right;
-            while (node->left != nullptr) {
-                node = node->left;
+        assert(_M_node);
+        if (_M_node->_M_right != nullptr) {
+            _M_node = _M_node->_M_right;
+            while (_M_node->_M_left != nullptr) {
+                _M_node = _M_node->_M_left;
             }
         } else {
-            while (node->parent != nullptr && node->pparent == &node->parent->right) {
-                node = node->parent;
+            while (_M_node->_M_parent != nullptr && _M_node->_M_pparent == &_M_node->_M_parent->_M_right) {
+                _M_node = _M_node->_M_parent;
             }
-            if (node->parent == nullptr) {
-                offBy1 = true;
+            if (_M_node->_M_parent == nullptr) {
+                _M_off_by_one = true;
                 return;
             }
-            node = node->parent;
+            _M_node = _M_node->_M_parent;
         }
     }
 
-    void operator--() noexcept {   // --it
+    void operator--() noexcept {   // --__it
         // 为了支持 --end()
-        if (offBy1) {
-            offBy1 = false;
-            node = *proot;
-            assert(node);
-            while (node->right != nullptr) {
-                node = node->right;
+        if (_M_off_by_one) {
+            _M_off_by_one = false;
+            _M_node = *_M_proot;
+            assert(_M_node);
+            while (_M_node->_M_right != nullptr) {
+                _M_node = _M_node->_M_right;
             }
             return;
         }
-        assert(node);
-        if (node->left != nullptr) {
-            node = node->left;
-            while (node->right != nullptr) {
-                node = node->right;
+        assert(_M_node);
+        if (_M_node->_M_left != nullptr) {
+            _M_node = _M_node->_M_left;
+            while (_M_node->_M_right != nullptr) {
+                _M_node = _M_node->_M_right;
             }
         } else {
-            while (node->parent != nullptr && node->pparent == &node->parent->left) {
-                node = node->parent;
+            while (_M_node->_M_parent != nullptr && _M_node->_M_pparent == &_M_node->_M_parent->_M_left) {
+                _M_node = _M_node->_M_parent;
             }
-            if (node->parent == nullptr) {
-                offBy1 = true;
+            if (_M_node->_M_parent == nullptr) {
+                _M_off_by_one = true;
                 return;
             }
-            node = node->parent;
+            _M_node = _M_node->_M_parent;
         }
     }
 
@@ -151,597 +151,597 @@ struct TreeIteratorBase<false> {
 };
 
 template <>
-struct TreeIteratorBase<true> : TreeIteratorBase<false> {
-    using TreeIteratorBase<false>::TreeIteratorBase;
+struct _RbTreeIteratorBase<true> : _RbTreeIteratorBase<false> {
+    using _RbTreeIteratorBase<false>::_RbTreeIteratorBase;
 
-    void operator++() noexcept {   // ++it
-        TreeIteratorBase<false>::operator--();
+    void operator++() noexcept {   // ++__it
+        _RbTreeIteratorBase<false>::operator--();
     }
 
-    void operator--() noexcept {   // --it
-        TreeIteratorBase<false>::operator++();
+    void operator--() noexcept {   // --__it
+        _RbTreeIteratorBase<false>::operator++();
     }
 };
 
-template <class T, bool kReverse>
-struct TreeIterator : TreeIteratorBase<kReverse> {
-    using TreeIteratorBase<kReverse>::TreeIteratorBase;
+template <class _T, bool kReverse>
+struct _RbTreeIterator : _RbTreeIteratorBase<kReverse> {
+    using _RbTreeIteratorBase<kReverse>::_RbTreeIteratorBase;
 
-    template <class T0 = T>
+    template <class T0 = _T>
     explicit operator std::enable_if_t<std::is_const_v<T0>,
-        TreeIterator<std::remove_const_t<T0>, kReverse>>() const noexcept {
-        return this->node;
+        _RbTreeIterator<std::remove_const_t<T0>, kReverse>>() const noexcept {
+        return this->_M_node;
     }
 
-    template <class T0 = T>
+    template <class T0 = _T>
     operator std::enable_if_t<!std::is_const_v<T0>,
-        TreeIterator<std::add_const_t<T0>, kReverse>>() const noexcept {
-        return this->node;
+        _RbTreeIterator<std::add_const_t<T0>, kReverse>>() const noexcept {
+        return this->_M_node;
     }
 
-    TreeIterator &operator++() noexcept {   // ++it
-        TreeIteratorBase<kReverse>::operator++();
+    _RbTreeIterator &operator++() noexcept {   // ++__it
+        _RbTreeIteratorBase<kReverse>::operator++();
         return *this;
     }
 
-    TreeIterator &operator--() noexcept {   // --it
-        TreeIteratorBase<kReverse>::operator--();
+    _RbTreeIterator &operator--() noexcept {   // --__it
+        _RbTreeIteratorBase<kReverse>::operator--();
         return *this;
     }
 
-    TreeIterator operator++(int) noexcept { // it++
-        TreeIterator tmp = *this;
+    _RbTreeIterator operator++(int) noexcept { // __it++
+        _RbTreeIterator __tmp = *this;
         ++*this;
-        return tmp;
+        return __tmp;
     }
 
-    TreeIterator operator--(int) noexcept { // it--
-        TreeIterator tmp = *this;
+    _RbTreeIterator operator--(int) noexcept { // __it--
+        _RbTreeIterator __tmp = *this;
         --*this;
-        return tmp;
+        return __tmp;
     }
 
-    T *operator->() const noexcept {
-        return std::addressof(static_cast<TreeNodeImpl<T> *>(this->node)->value);
+    _T *operator->() const noexcept {
+        return std::addressof(static_cast<_RbTreeNodeImpl<_T> *>(this->_M_node)->_M_value);
     }
 
-    T &operator*() const noexcept {
-        return static_cast<TreeNodeImpl<T> *>(this->node)->value;
+    _T &operator*() const noexcept {
+        return static_cast<_RbTreeNodeImpl<_T> *>(this->_M_node)->_M_value;
     }
 
-    using value_type = std::remove_const_t<T>;
-    using reference = T &;
-    using pointer = T *;
+    using value_type = std::remove_const_t<_T>;
+    using reference = _T &;
+    using pointer = _T *;
 };
 
-struct TreeRoot {
-    TreeNode *root;
+struct _RbTreeRoot {
+    _RbTreeNode *_M_root;
 
-    TreeRoot() noexcept : root(nullptr) {
+    _RbTreeRoot() noexcept : _M_root(nullptr) {
     }
 };
 
-struct TreeBase {
-    TreeRoot *block;
+struct _RbTreeBase {
+    _RbTreeRoot *_M_block;
 
-    explicit TreeBase(TreeRoot *block) : block(block) {}
+    explicit _RbTreeBase(_RbTreeRoot *__block) : _M_block(__block) {}
 
-    static void _M_rotate_left(TreeNode *node) noexcept {
-        TreeNode *right = node->right;
-        node->right = right->left;
-        if (right->left != nullptr) {
-            right->left->parent = node;
-            right->left->pparent = &node->right;
+    static void _M_rotate_left(_RbTreeNode *__node) noexcept {
+        _RbTreeNode *__right = __node->_M_right;
+        __node->_M_right = __right->_M_left;
+        if (__right->_M_left != nullptr) {
+            __right->_M_left->_M_parent = __node;
+            __right->_M_left->_M_pparent = &__node->_M_right;
         }
-        right->parent = node->parent;
-        right->pparent = node->pparent;
-        *node->pparent = right;
-        right->left = node;
-        node->parent = right;
-        node->pparent = &right->left;
+        __right->_M_parent = __node->_M_parent;
+        __right->_M_pparent = __node->_M_pparent;
+        *__node->_M_pparent = __right;
+        __right->_M_left = __node;
+        __node->_M_parent = __right;
+        __node->_M_pparent = &__right->_M_left;
     }
 
-    static void _M_rotate_right(TreeNode *node) noexcept {
-        TreeNode *left = node->left;
-        node->left = left->right;
-        if (left->right != nullptr) {
-            left->right->parent = node;
-            left->right->pparent = &node->left;
+    static void _M_rotate_right(_RbTreeNode *__node) noexcept {
+        _RbTreeNode *__left = __node->_M_left;
+        __node->_M_left = __left->_M_right;
+        if (__left->_M_right != nullptr) {
+            __left->_M_right->_M_parent = __node;
+            __left->_M_right->_M_pparent = &__node->_M_left;
         }
-        left->parent = node->parent;
-        left->pparent = node->pparent;
-        *node->pparent = left;
-        left->right = node;
-        node->parent = left;
-        node->pparent = &left->right;
+        __left->_M_parent = __node->_M_parent;
+        __left->_M_pparent = __node->_M_pparent;
+        *__node->_M_pparent = __left;
+        __left->_M_right = __node;
+        __node->_M_parent = __left;
+        __node->_M_pparent = &__left->_M_right;
     }
 
-    static void _M_fix_violation(TreeNode *node) noexcept {
+    static void _M_fix_violation(_RbTreeNode *__node) noexcept {
         while (true) {
-            TreeNode *parent = node->parent;
-            if (parent == nullptr) { // 等价于：node == root，因为 root->parent == nullptr
-                // 情况 0: node == root
-                node->color = BLACK;
+            _RbTreeNode *__parent = __node->_M_parent;
+            if (__parent == nullptr) { // 等价于：__node == root，因为 root->__parent == nullptr
+                // 情况 0: __node == root
+                __node->_M_color = _S_black;
                 return;
             }
-            if (node->color == BLACK || parent->color == BLACK)
+            if (__node->_M_color == _S_black || __parent->_M_color == _S_black)
                 return;
-            TreeNode *uncle;
-            TreeNode *grandpa = parent->parent;
-            assert(grandpa);
-            TreeChildDir parent_dir = parent->pparent == &grandpa->left ? LEFT : RIGHT;
-            if (parent_dir == LEFT) {
-                uncle = grandpa->right;
+            _RbTreeNode *__uncle;
+            _RbTreeNode *__grandpa = __parent->_M_parent;
+            assert(__grandpa);
+            _RbTreeChildDir __parent_dir = __parent->_M_pparent == &__grandpa->_M_left ? _S_left : _S_right;
+            if (__parent_dir == _S_left) {
+                __uncle = __grandpa->_M_right;
             } else {
-                assert(parent->pparent == &grandpa->right);
-                uncle = grandpa->left;
+                assert(__parent->_M_pparent == &__grandpa->_M_right);
+                __uncle = __grandpa->_M_left;
             }
-            TreeChildDir node_dir = node->pparent == &parent->left ? LEFT : RIGHT;
-            if (uncle != nullptr && uncle->color == RED) {
+            _RbTreeChildDir __node_dir = __node->_M_pparent == &__parent->_M_left ? _S_left : _S_right;
+            if (__uncle != nullptr && __uncle->_M_color == _S_red) {
                 // 情况 1: 叔叔是红色人士
-                parent->color = BLACK;
-                uncle->color = BLACK;
-                grandpa->color = RED;
-                node = grandpa;
-            } else if (node_dir == parent_dir) {
-                if (node_dir == RIGHT) {
-                    assert(node->pparent == &parent->right);
+                __parent->_M_color = _S_black;
+                __uncle->_M_color = _S_black;
+                __grandpa->_M_color = _S_red;
+                __node = __grandpa;
+            } else if (__node_dir == __parent_dir) {
+                if (__node_dir == _S_right) {
+                    assert(__node->_M_pparent == &__parent->_M_right);
                     // 情况 2: 叔叔是黑色人士（RR）
-                    TreeBase::_M_rotate_left(grandpa);
+                    _RbTreeBase::_M_rotate_left(__grandpa);
                 } else {
                     // 情况 3: 叔叔是黑色人士（LL）
-                    TreeBase::_M_rotate_right(grandpa);
+                    _RbTreeBase::_M_rotate_right(__grandpa);
                 }
-                std::swap(parent->color, grandpa->color);
-                node = grandpa;
+                std::swap(__parent->_M_color, __grandpa->_M_color);
+                __node = __grandpa;
             } else {
-                if (node_dir == RIGHT) {
-                    assert(node->pparent == &parent->right);
+                if (__node_dir == _S_right) {
+                    assert(__node->_M_pparent == &__parent->_M_right);
                     // 情况 4: 叔叔是黑色人士（LR）
-                    TreeBase::_M_rotate_left(parent);
+                    _RbTreeBase::_M_rotate_left(__parent);
                 } else {
                     // 情况 5: 叔叔是黑色人士（RL）
-                    TreeBase::_M_rotate_right(parent);
+                    _RbTreeBase::_M_rotate_right(__parent);
                 }
-                node = parent;
+                __node = __parent;
             }
         }
     }
 
-    TreeNode *_M_min_node() const noexcept {
-        TreeNode *current = block->root;
-        if (current != nullptr) {
-            while (current->left != nullptr) {
-                current = current->left;
+    _RbTreeNode *_M_min_node() const noexcept {
+        _RbTreeNode *__current = _M_block->_M_root;
+        if (__current != nullptr) {
+            while (__current->_M_left != nullptr) {
+                __current = __current->_M_left;
             }
         }
-        return current;
+        return __current;
     }
 
-    TreeNode *_M_max_node() const noexcept {
-        TreeNode *current = block->root;
-        if (current != nullptr) {
-            while (current->right != nullptr) {
-                current = current->right;
+    _RbTreeNode *_M_max_node() const noexcept {
+        _RbTreeNode *__current = _M_block->_M_root;
+        if (__current != nullptr) {
+            while (__current->_M_right != nullptr) {
+                __current = __current->_M_right;
             }
         }
-        return current;
+        return __current;
     }
 
-    template <class T, class Tv, class Compare>
-    TreeNode *_M_find_node(Tv &&value, Compare comp) const noexcept {
-        TreeNode *current = block->root;
-        while (current != nullptr) {
-            if (comp(value, static_cast<TreeNodeImpl<T> *>(current)->value)) {
-                current = current->left;
+    template <class _T, class _Tv, class _Compare>
+    _RbTreeNode *_M_find_node(_Tv &&__value, _Compare __comp) const noexcept {
+        _RbTreeNode *__current = _M_block->_M_root;
+        while (__current != nullptr) {
+            if (__comp(__value, static_cast<_RbTreeNodeImpl<_T> *>(__current)->_M_value)) {
+                __current = __current->_M_left;
                 continue;
             }
-            if (comp(static_cast<TreeNodeImpl<T> *>(current)->value, value)) {
-                current = current->right;
+            if (__comp(static_cast<_RbTreeNodeImpl<_T> *>(__current)->_M_value, __value)) {
+                __current = __current->_M_right;
                 continue;
             }
-            // value == curent->value
-            return current;
+            // __value == curent->_M_value
+            return __current;
         }
         return nullptr;
     }
 
-    template <class T, class Tv, class Compare>
-    TreeNode *_M_lower_bound(Tv &&value, Compare comp) const noexcept {
-        TreeNode *current = block->root;
-        TreeNode *result = nullptr;
-        while (current != nullptr) {
-            if (!(comp(static_cast<TreeNodeImpl<T> *>(current)->value, value))) { // current->value >= value
-                result = current;
-                current = current->left;
+    template <class _T, class _Tv, class _Compare>
+    _RbTreeNode *_M_lower_bound(_Tv &&__value, _Compare __comp) const noexcept {
+        _RbTreeNode *__current = _M_block->_M_root;
+        _RbTreeNode *__result = nullptr;
+        while (__current != nullptr) {
+            if (!(__comp(static_cast<_RbTreeNodeImpl<_T> *>(__current)->_M_value, __value))) { // __current->_M_value >= __value
+                __result = __current;
+                __current = __current->_M_left;
             } else {
-                current = current->right;
+                __current = __current->_M_right;
             }
         }
-        return result;
+        return __result;
     }
 
-    template <class T, class Tv, class Compare>
-    TreeNode *_M_upper_bound(Tv &&value, Compare comp) const noexcept {
-        TreeNode *current = block->root;
-        TreeNode *result = nullptr;
-        while (current != nullptr) {
-            if (comp(value, static_cast<TreeNodeImpl<T> *>(current)->value)) { // current->value > value
-                result = current;
-                current = current->left;
+    template <class _T, class _Tv, class _Compare>
+    _RbTreeNode *_M_upper_bound(_Tv &&__value, _Compare __comp) const noexcept {
+        _RbTreeNode *__current = _M_block->_M_root;
+        _RbTreeNode *__result = nullptr;
+        while (__current != nullptr) {
+            if (__comp(__value, static_cast<_RbTreeNodeImpl<_T> *>(__current)->_M_value)) { // __current->_M_value > __value
+                __result = __current;
+                __current = __current->_M_left;
             } else {
-                current = current->right;
+                __current = __current->_M_right;
             }
         }
-        return result;
+        return __result;
     }
 
-    template <class T, class Tv, class Compare>
-    std::pair<TreeNode *, TreeNode *> _M_equal_range(Tv &&value, Compare comp) const noexcept {
-        return {this->_M_lower_bound<T>(value, comp), this->_M_upper_bound<T>(value, comp)};
+    template <class _T, class _Tv, class _Compare>
+    std::pair<_RbTreeNode *, _RbTreeNode *> _M_equal_range(_Tv &&__value, _Compare __comp) const noexcept {
+        return {this->_M_lower_bound<_T>(__value, __comp), this->_M_upper_bound<_T>(__value, __comp)};
     }
 
-    static void _M_transplant(TreeNode *node, TreeNode *replace) noexcept {
-        *node->pparent = replace;
-        if (replace != nullptr) {
-            replace->parent = node->parent;
-            replace->pparent = node->pparent;
+    static void _M_transplant(_RbTreeNode *__node, _RbTreeNode *__replace) noexcept {
+        *__node->_M_pparent = __replace;
+        if (__replace != nullptr) {
+            __replace->_M_parent = __node->_M_parent;
+            __replace->_M_pparent = __node->_M_pparent;
         }
     }
 
-    static void _M_delete_fixup(TreeNode *node) noexcept {
-        if (node == nullptr)
+    static void _M_delete_fixup(_RbTreeNode *__node) noexcept {
+        if (__node == nullptr)
             return;
-        while (node->parent != nullptr && node->color == BLACK) {
-            TreeChildDir dir = node->pparent == &node->parent->left ? LEFT : RIGHT;
-            TreeNode *sibling = dir == LEFT ? node->parent->right : node->parent->left;
-            if (sibling->color == RED) {
-                sibling->color = BLACK;
-                node->parent->color = RED;
-                if (dir == LEFT) {
-                    TreeBase::_M_rotate_left(node->parent);
+        while (__node->_M_parent != nullptr && __node->_M_color == _S_black) {
+            _RbTreeChildDir __dir = __node->_M_pparent == &__node->_M_parent->_M_left ? _S_left : _S_right;
+            _RbTreeNode *__sibling = __dir == _S_left ? __node->_M_parent->_M_right : __node->_M_parent->_M_left;
+            if (__sibling->_M_color == _S_red) {
+                __sibling->_M_color = _S_black;
+                __node->_M_parent->_M_color = _S_red;
+                if (__dir == _S_left) {
+                    _RbTreeBase::_M_rotate_left(__node->_M_parent);
                 } else {
-                    TreeBase::_M_rotate_right(node->parent);
+                    _RbTreeBase::_M_rotate_right(__node->_M_parent);
                 }
-                sibling = dir == LEFT ? node->parent->right : node->parent->left;
+                __sibling = __dir == _S_left ? __node->_M_parent->_M_right : __node->_M_parent->_M_left;
             }
-            if (sibling->left->color == BLACK && sibling->right->color == BLACK) {
-                sibling->color = RED;
-                node = node->parent;
+            if (__sibling->_M_left->_M_color == _S_black && __sibling->_M_right->_M_color == _S_black) {
+                __sibling->_M_color = _S_red;
+                __node = __node->_M_parent;
             } else {
-                if (dir == LEFT && sibling->right->color == BLACK) {
-                    sibling->left->color = BLACK;
-                    sibling->color = RED;
-                    TreeBase::_M_rotate_right(sibling);
-                    sibling = node->parent->right;
-                } else if (dir == RIGHT && sibling->left->color == BLACK) {
-                    sibling->right->color = BLACK;
-                    sibling->color = RED;
-                    TreeBase::_M_rotate_left(sibling);
-                    sibling = node->parent->left;
+                if (__dir == _S_left && __sibling->_M_right->_M_color == _S_black) {
+                    __sibling->_M_left->_M_color = _S_black;
+                    __sibling->_M_color = _S_red;
+                    _RbTreeBase::_M_rotate_right(__sibling);
+                    __sibling = __node->_M_parent->_M_right;
+                } else if (__dir == _S_right && __sibling->_M_left->_M_color == _S_black) {
+                    __sibling->_M_right->_M_color = _S_black;
+                    __sibling->_M_color = _S_red;
+                    _RbTreeBase::_M_rotate_left(__sibling);
+                    __sibling = __node->_M_parent->_M_left;
                 }
-                sibling->color = node->parent->color;
-                node->parent->color = BLACK;
-                if (dir == LEFT) {
-                    sibling->right->color = BLACK;
-                    TreeBase::_M_rotate_left(node->parent);
+                __sibling->_M_color = __node->_M_parent->_M_color;
+                __node->_M_parent->_M_color = _S_black;
+                if (__dir == _S_left) {
+                    __sibling->_M_right->_M_color = _S_black;
+                    _RbTreeBase::_M_rotate_left(__node->_M_parent);
                 } else {
-                    sibling->left->color = BLACK;
-                    TreeBase::_M_rotate_right(node->parent);
+                    __sibling->_M_left->_M_color = _S_black;
+                    _RbTreeBase::_M_rotate_right(__node->_M_parent);
                 }
-                while (node->parent != nullptr) {
-                    node = node->parent;
-                }
-                // break;
+                // while (__node->_M_parent != nullptr) {
+                //     __node = __node->_M_parent;
+                // }
+                break;
             }
         }
-        node->color = BLACK;
+        __node->_M_color = _S_black;
     }
 
-    static void _M_erase_node(TreeNode *node) noexcept {
-        if (node->left == nullptr) {
-            TreeNode *right = node->right;
-            TreeColor color = node->color;
-            TreeBase::_M_transplant(node, right);
-            if (color == BLACK) {
-                TreeBase::_M_delete_fixup(right);
+    static void _M_erase_node(_RbTreeNode *__node) noexcept {
+        if (__node->_M_left == nullptr) {
+            _RbTreeNode *__right = __node->_M_right;
+            _RbTreeColor __color = __node->_M_color;
+            _RbTreeBase::_M_transplant(__node, __right);
+            if (__color == _S_black) {
+                _RbTreeBase::_M_delete_fixup(__right);
             }
-        } else if (node->right == nullptr) {
-            TreeNode *left = node->left;
-            TreeColor color = node->color;
-            TreeBase::_M_transplant(node, left);
-            if (color == BLACK) {
-                TreeBase::_M_delete_fixup(left);
+        } else if (__node->_M_right == nullptr) {
+            _RbTreeNode *__left = __node->_M_left;
+            _RbTreeColor __color = __node->_M_color;
+            _RbTreeBase::_M_transplant(__node, __left);
+            if (__color == _S_black) {
+                _RbTreeBase::_M_delete_fixup(__left);
             }
         } else {
-            TreeNode *replace = node->right;
-            while (replace->left != nullptr) {
-                replace = replace->left;
+            _RbTreeNode *__replace = __node->_M_right;
+            while (__replace->_M_left != nullptr) {
+                __replace = __replace->_M_left;
             }
-            TreeNode *right = replace->right;
-            TreeColor color = replace->color;
-            if (replace->parent == node) {
-                right->parent = replace;
-                right->pparent = &replace->right;
+            _RbTreeNode *__right = __replace->_M_right;
+            _RbTreeColor __color = __replace->_M_color;
+            if (__replace->_M_parent == __node) {
+                __right->_M_parent = __replace;
+                __right->_M_pparent = &__replace->_M_right;
             } else {
-                TreeBase::_M_transplant(replace, right);
-                replace->right = node->right;
-                replace->right->parent = replace;
-                replace->right->pparent = &replace->right;
+                _RbTreeBase::_M_transplant(__replace, __right);
+                __replace->_M_right = __node->_M_right;
+                __replace->_M_right->_M_parent = __replace;
+                __replace->_M_right->_M_pparent = &__replace->_M_right;
             }
-            TreeBase::_M_transplant(node, replace);
-            replace->left = node->left;
-            replace->left->parent = replace;
-            replace->left->pparent = &replace->left;
-            if (color == BLACK) {
-                TreeBase::_M_delete_fixup(right);
+            _RbTreeBase::_M_transplant(__node, __replace);
+            __replace->_M_left = __node->_M_left;
+            __replace->_M_left->_M_parent = __replace;
+            __replace->_M_left->_M_pparent = &__replace->_M_left;
+            if (__color == _S_black) {
+                _RbTreeBase::_M_delete_fixup(__right);
             }
         }
     }
 
-    template <class T, class Compare>
-    TreeNode *_M_single_insert_node(TreeNode *node, Compare comp) {
-        TreeNode **pparent = &block->root;
-        TreeNode *parent = nullptr;
-        while (*pparent != nullptr) {
-            parent = *pparent;
-            if (comp(static_cast<TreeNodeImpl<T> *>(node)->value, static_cast<TreeNodeImpl<T> *>(parent)->value)) {
-                pparent = &parent->left;
+    template <class _T, class _Compare>
+    _RbTreeNode *_M_single_insert_node(_RbTreeNode *__node, _Compare __comp) {
+        _RbTreeNode **__pparent = &_M_block->_M_root;
+        _RbTreeNode *__parent = nullptr;
+        while (*__pparent != nullptr) {
+            __parent = *__pparent;
+            if (__comp(static_cast<_RbTreeNodeImpl<_T> *>(__node)->_M_value, static_cast<_RbTreeNodeImpl<_T> *>(__parent)->_M_value)) {
+                __pparent = &__parent->_M_left;
                 continue;
             }
-            if (comp(static_cast<TreeNodeImpl<T> *>(parent)->value, static_cast<TreeNodeImpl<T> *>(node)->value)) {
-                pparent = &parent->right;
+            if (__comp(static_cast<_RbTreeNodeImpl<_T> *>(__parent)->_M_value, static_cast<_RbTreeNodeImpl<_T> *>(__node)->_M_value)) {
+                __pparent = &__parent->_M_right;
                 continue;
             }
-            return parent;
+            return __parent;
         }
 
-        node->left = nullptr;
-        node->right = nullptr;
-        node->color = RED;
+        __node->_M_left = nullptr;
+        __node->_M_right = nullptr;
+        __node->_M_color = _S_red;
 
-        node->parent = parent;
-        node->pparent = pparent;
-        *pparent = node;
-        TreeBase::_M_fix_violation(node);
+        __node->_M_parent = __parent;
+        __node->_M_pparent = __pparent;
+        *__pparent = __node;
+        _RbTreeBase::_M_fix_violation(__node);
         return nullptr;
     }
 
-    template <class T, class Compare>
-    void _M_multi_insert_node(TreeNode *node, Compare comp) {
-        TreeNode **pparent = &block->root;
-        TreeNode *parent = nullptr;
-        while (*pparent != nullptr) {
-            parent = *pparent;
-            if (comp(static_cast<TreeNodeImpl<T> *>(node)->value, static_cast<TreeNodeImpl<T> *>(parent)->value)) {
-                pparent = &parent->left;
+    template <class _T, class _Compare>
+    void _M_multi_insert_node(_RbTreeNode *__node, _Compare __comp) {
+        _RbTreeNode **__pparent = &_M_block->_M_root;
+        _RbTreeNode *__parent = nullptr;
+        while (*__pparent != nullptr) {
+            __parent = *__pparent;
+            if (__comp(static_cast<_RbTreeNodeImpl<_T> *>(__node)->_M_value, static_cast<_RbTreeNodeImpl<_T> *>(__parent)->_M_value)) {
+                __pparent = &__parent->_M_left;
                 continue;
             }
-            if (comp(static_cast<TreeNodeImpl<T> *>(parent)->value, static_cast<TreeNodeImpl<T> *>(node)->value)) {
-                pparent = &parent->right;
+            if (__comp(static_cast<_RbTreeNodeImpl<_T> *>(__parent)->_M_value, static_cast<_RbTreeNodeImpl<_T> *>(__node)->_M_value)) {
+                __pparent = &__parent->_M_right;
                 continue;
             }
-            pparent = &parent->right;
+            __pparent = &__parent->_M_right;
         }
 
-        node->left = nullptr;
-        node->right = nullptr;
-        node->color = RED;
+        __node->_M_left = nullptr;
+        __node->_M_right = nullptr;
+        __node->_M_color = _S_red;
 
-        node->parent = parent;
-        node->pparent = pparent;
-        *pparent = node;
-        TreeBase::_M_fix_violation(node);
+        __node->_M_parent = __parent;
+        __node->_M_pparent = __pparent;
+        *__pparent = __node;
+        _RbTreeBase::_M_fix_violation(__node);
     }
 };
 
-template <class T, class Compare>
-struct TreeImpl : TreeBase {
-    [[no_unique_address]] Compare _M_comp;
+template <class _T, class _Compare>
+struct _RbTreeImpl : _RbTreeBase {
+    [[no_unique_address]] _Compare _M_comp;
 
-    TreeImpl() noexcept : TreeBase(new TreeRoot) {}
+    _RbTreeImpl() noexcept : _RbTreeBase(new _RbTreeRoot) {}
 
-    explicit TreeImpl(Compare comp) noexcept : TreeBase(new TreeRoot), _M_comp(comp) {}
+    explicit _RbTreeImpl(_Compare __comp) noexcept : _RbTreeBase(new _RbTreeRoot), _M_comp(__comp) {}
 
-    TreeImpl(TreeImpl &&that) noexcept : TreeBase(that.block) {
-        that.block = nullptr;
+    _RbTreeImpl(_RbTreeImpl &&__that) noexcept : _RbTreeBase(__that._M_block) {
+        __that._M_block = nullptr;
     }
 
-    TreeImpl &operator=(TreeImpl &&that) noexcept {
-        std::swap(block, that.block);
+    _RbTreeImpl &operator=(_RbTreeImpl &&__that) noexcept {
+        std::swap(_M_block, __that._M_block);
         return *this;
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    void _M_single_insert(InputIt first, InputIt last) {
-        while (first != last) {
-            this->_M_single_insert(*first);
-            ++first;
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    void _M_single_insert(_InputIt __first, _InputIt __last) {
+        while (__first != __last) {
+            this->_M_single_insert(*__first);
+            ++__first;
         }
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    void _M_multi_insert(InputIt first, InputIt last) {
-        while (first != last) {
-            this->_M_multi_insert(*first);
-            ++first;
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    void _M_multi_insert(_InputIt __first, _InputIt __last) {
+        while (__first != __last) {
+            this->_M_multi_insert(*__first);
+            ++__first;
         }
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    void assign(InputIt first, InputIt last) {
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    void assign(_InputIt __first, _InputIt __last) {
         this->clear();
-        this->_M_multi_insert(first, last);
+        this->_M_multi_insert(__first, __last);
     }
 
-    using iterator = TreeIterator<T, false>;
-    using reverse_iterator = TreeIterator<T, true>;
-    using const_iterator = TreeIterator<T const, false>;
-    using const_reverse_iterator = TreeIterator<T const, true>;
+    using iterator = _RbTreeIterator<_T, false>;
+    using reverse_iterator = _RbTreeIterator<_T, true>;
+    using const_iterator = _RbTreeIterator<_T const, false>;
+    using const_reverse_iterator = _RbTreeIterator<_T const, true>;
 
     static_assert(std::input_iterator<iterator>);
 
-    template <class Tv>
-    const_iterator _M_find(Tv &&value) const noexcept {
-        return this->_M_prevent_end(this->_M_find_node<T>(value, _M_comp));
+    template <class _Tv>
+    const_iterator _M_find(_Tv &&__value) const noexcept {
+        return this->_M_prevent_end(this->_M_find_node<_T>(__value, _M_comp));
     }
 
-    template <class Tv>
-    iterator _M_find(Tv &&value) noexcept {
-        return this->_M_prevent_end(this->_M_find_node<T>(value, _M_comp));
+    template <class _Tv>
+    iterator _M_find(_Tv &&__value) noexcept {
+        return this->_M_prevent_end(this->_M_find_node<_T>(__value, _M_comp));
     }
 
 
     template <class ...Ts>
-    iterator _M_multi_emplace(Ts &&...value) {
-        TreeNodeImpl<T> *node = new TreeNodeImpl<T>;
-        new (std::addressof(node->value)) T(std::forward<Ts>(value)...);
-        this->_M_multi_insert_node<T>(node, _M_comp);
-        return node;
+    iterator _M_multi_emplace(Ts &&...__value) {
+        _RbTreeNodeImpl<_T> *__node = new _RbTreeNodeImpl<_T>;
+        new (std::addressof(__node->_M_value)) _T(std::forward<Ts>(__value)...);
+        this->_M_multi_insert_node<_T>(__node, _M_comp);
+        return __node;
     }
 
     template <class ...Ts>
-    std::pair<iterator, bool> _M_single_emplace(Ts &&...value) {
-        TreeNode *node = new TreeNodeImpl<T>;
-        new (std::addressof(static_cast<TreeNodeImpl<T> *>(node)->value)) T(std::forward<Ts>(value)...);
-        TreeNode *conflict = this->_M_single_insert_node<T>(node, _M_comp);
+    std::pair<iterator, bool> _M_single_emplace(Ts &&...__value) {
+        _RbTreeNode *__node = new _RbTreeNodeImpl<_T>;
+        new (std::addressof(static_cast<_RbTreeNodeImpl<_T> *>(__node)->_M_value)) _T(std::forward<Ts>(__value)...);
+        _RbTreeNode *conflict = this->_M_single_insert_node<_T>(__node, _M_comp);
         if (conflict) {
-            static_cast<TreeNodeImpl<T> *>(node)->value.~T();
-            delete node;
+            static_cast<_RbTreeNodeImpl<_T> *>(__node)->_M_value.~_T();
+            delete __node;
             return {conflict, false};
         } else {
-            return {node, true};
+            return {__node, true};
         }
     }
 
     void clear() noexcept {
-        for (auto it = this->begin(); it != this->end(); ++it) {
-            it = this->erase(it);
+        for (iterator __it = this->begin(); __it != this->end(); ++__it) {
+            __it = this->erase(__it);
         }
     }
 
-    static iterator erase(const_iterator it) noexcept {
-        const_iterator tmp = it;
-        ++tmp;
-        TreeNode *node = it.node;
-        TreeImpl::_M_erase_node(node);
-        static_cast<TreeNodeImpl<T> *>(node)->value.~T();
-        delete node;
-        return iterator(tmp);
+    static iterator erase(const_iterator __it) noexcept {
+        const_iterator __tmp = __it;
+        ++__tmp;
+        _RbTreeNode *__node = __it._M_node;
+        _RbTreeImpl::_M_erase_node(__node);
+        static_cast<_RbTreeNodeImpl<_T> *>(__node)->_M_value.~_T();
+        delete __node;
+        return iterator(__tmp);
     }
 
-    template <class Tv>
-    size_t _M_single_erase(Tv &&value) noexcept {
-        TreeNode *node = this->_M_find_node<T>(value, _M_comp);
-        if (node != nullptr) {
-            this->_M_erase_node(node);
-            static_cast<TreeNodeImpl<T> *>(node)->value.~T();
-            delete node;
+    template <class _Tv>
+    size_t _M_single_erase(_Tv &&__value) noexcept {
+        _RbTreeNode *__node = this->_M_find_node<_T>(__value, _M_comp);
+        if (__node != nullptr) {
+            this->_M_erase_node(__node);
+            static_cast<_RbTreeNodeImpl<_T> *>(__node)->_M_value.~_T();
+            delete __node;
             return 1;
         } else {
             return 0;
         }
     }
 
-    static std::pair<iterator, size_t> _M_erase_range(const_iterator first, const_iterator last) noexcept {
+    static std::pair<iterator, size_t> _M_erase_range(const_iterator __first, const_iterator __last) noexcept {
         size_t num = 0;
-        while (first != last) {
-            first = TreeImpl::erase(first);
+        while (__first != __last) {
+            __first = _RbTreeImpl::erase(__first);
             ++num;
         }
-        return {iterator(first), num};
+        return {iterator(__first), num};
     }
 
-    template <class Tv>
-    size_t _M_multi_erase(Tv &&value) noexcept {
-        std::pair<iterator, iterator> range = this->equal_range(value);
+    template <class _Tv>
+    size_t _M_multi_erase(_Tv &&__value) noexcept {
+        std::pair<iterator, iterator> range = this->equal_range(__value);
         return this->_M_erase_range(range.first, range.second).second;
     }
 
-    static iterator erase(const_iterator first, const_iterator last) noexcept {
-        return TreeImpl::_M_erase_range(first, last).first;
+    static iterator erase(const_iterator __first, const_iterator __last) noexcept {
+        return _RbTreeImpl::_M_erase_range(__first, __last).first;
     }
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    iterator lower_bound(Tv &&value) noexcept {
-        return this->_M_lower_bound<T>(value, _M_comp);
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    iterator lower_bound(_Tv &&__value) noexcept {
+        return this->_M_lower_bound<_T>(__value, _M_comp);
     }
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    const_iterator lower_bound(Tv &&value) const noexcept {
-        return this->_M_lower_bound<T>(value, _M_comp);
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    const_iterator lower_bound(_Tv &&__value) const noexcept {
+        return this->_M_lower_bound<_T>(__value, _M_comp);
     }
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    iterator upper_bound(Tv &&value) noexcept {
-        return this->_M_upper_bound<T>(value, _M_comp);
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    iterator upper_bound(_Tv &&__value) noexcept {
+        return this->_M_upper_bound<_T>(__value, _M_comp);
     }
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    const_iterator upper_bound(Tv &&value) const noexcept {
-        return this->_M_upper_bound<T>(value, _M_comp);
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    const_iterator upper_bound(_Tv &&__value) const noexcept {
+        return this->_M_upper_bound<_T>(__value, _M_comp);
     }
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    std::pair<iterator, iterator> equal_range(Tv &&value) noexcept {
-        return {this->lower_bound(value), this->upper_bound(value)};
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    std::pair<iterator, iterator> equal_range(_Tv &&__value) noexcept {
+        return {this->lower_bound(__value), this->upper_bound(__value)};
     }
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    std::pair<const_iterator, const_iterator> equal_range(Tv &&value) const noexcept {
-        return {this->lower_bound(value), this->upper_bound(value)};
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    std::pair<const_iterator, const_iterator> equal_range(_Tv &&__value) const noexcept {
+        return {this->lower_bound(__value), this->upper_bound(__value)};
     }
 
 
-    iterator lower_bound(T const &value) noexcept {
-        return this->_M_prevent_end(this->_M_lower_bound<T>(value, _M_comp));
+    iterator lower_bound(_T const &__value) noexcept {
+        return this->_M_prevent_end(this->_M_lower_bound<_T>(__value, _M_comp));
     }
 
-    const_iterator lower_bound(T const &value) const noexcept {
-        return this->_M_prevent_end(this->_M_lower_bound<T>(value, _M_comp));
+    const_iterator lower_bound(_T const &__value) const noexcept {
+        return this->_M_prevent_end(this->_M_lower_bound<_T>(__value, _M_comp));
     }
 
-    iterator upper_bound(T const &value) noexcept {
-        return this->_M_prevent_end(this->_M_upper_bound<T>(value, _M_comp));
+    iterator upper_bound(_T const &__value) noexcept {
+        return this->_M_prevent_end(this->_M_upper_bound<_T>(__value, _M_comp));
     }
 
-    const_iterator upper_bound(T const &value) const noexcept {
-        return this->_M_prevent_end(this->_M_upper_bound<T>(value, _M_comp));
+    const_iterator upper_bound(_T const &__value) const noexcept {
+        return this->_M_prevent_end(this->_M_upper_bound<_T>(__value, _M_comp));
     }
 
-    std::pair<iterator, iterator> equal_range(T const &value) noexcept {
-        return {this->lower_bound(value), this->upper_bound(value)};
+    std::pair<iterator, iterator> equal_range(_T const &__value) noexcept {
+        return {this->lower_bound(__value), this->upper_bound(__value)};
     }
 
-    std::pair<const_iterator, const_iterator> equal_range(T const &value) const noexcept {
-        return {this->lower_bound(value), this->upper_bound(value)};
+    std::pair<const_iterator, const_iterator> equal_range(_T const &__value) const noexcept {
+        return {this->lower_bound(__value), this->upper_bound(__value)};
     }
 
-    template <class Tv>
-    size_t _M_multi_count(Tv &&value) const noexcept {
-        auto it = this->lower_bound(value);
-        return it != end() ? std::distance(it, this->upper_bound()) : 0;
+    template <class _Tv>
+    size_t _M_multi_count(_Tv &&__value) const noexcept {
+        const_iterator __it = this->lower_bound(__value);
+        return __it != end() ? std::distance(__it, this->upper_bound()) : 0;
     }
 
-    template <class Tv>
-    bool _M_contains(Tv &&value) const noexcept {
-        return this->template _M_find_node<T>(value, _M_comp) != nullptr;
+    template <class _Tv>
+    bool _M_contains(_Tv &&__value) const noexcept {
+        return this->template _M_find_node<_T>(__value, _M_comp) != nullptr;
     }
 
-    iterator _M_prevent_end(TreeNode *node) noexcept {
-        return node == nullptr ? end() : node;
+    iterator _M_prevent_end(_RbTreeNode *__node) noexcept {
+        return __node == nullptr ? end() : __node;
     }
 
-    reverse_iterator _M_prevent_rend(TreeNode *node) noexcept {
-        return node == nullptr ? rend() : node;
+    reverse_iterator _M_prevent_rend(_RbTreeNode *__node) noexcept {
+        return __node == nullptr ? rend() : __node;
     }
 
-    const_iterator _M_prevent_end(TreeNode *node) const noexcept {
-        return node == nullptr ? end() : node;
+    const_iterator _M_prevent_end(_RbTreeNode *__node) const noexcept {
+        return __node == nullptr ? end() : __node;
     }
 
-    const_reverse_iterator _M_prevent_rend(TreeNode *node) const noexcept {
-        return node == nullptr ? rend() : node;
+    const_reverse_iterator _M_prevent_rend(_RbTreeNode *__node) const noexcept {
+        return __node == nullptr ? rend() : __node;
     }
 
     iterator begin() noexcept {
@@ -753,11 +753,11 @@ struct TreeImpl : TreeBase {
     }
 
     iterator end() noexcept {
-        return &block->root;
+        return &_M_block->_M_root;
     }
 
     reverse_iterator rend() noexcept {
-        return &block->root;
+        return &_M_block->_M_root;
     }
 
     const_iterator begin() const noexcept {
@@ -769,672 +769,674 @@ struct TreeImpl : TreeBase {
     }
 
     const_iterator end() const noexcept {
-        return &block->root;
+        return &_M_block->_M_root;
     }
 
     const_reverse_iterator rend() const noexcept {
-        return &block->root;
+        return &_M_block->_M_root;
     }
 
-    void _M_print(TreeNode *node) {
-        if (node) {
-            T &value = static_cast<TreeNodeImpl<T> *>(node)->value;
-            if constexpr (requires (T t) { t.first; t.second; }) {
-                std::cout << value.first << ':' << value.second;
-            } else {
-                std::cout << value;
-            }
-            std::cout << '(' << (node->color == BLACK ? 'B' : 'R') << ' ';
-            if (node->left) {
-                if (node->left->parent != node || node->left->pparent != &node->left) {
-                    std::cout << '*';
-                }
-            }
-            _M_print(node->left);
-            std::cout << ' ';
-            if (node->right) {
-                if (node->right->parent != node || node->right->pparent != &node->right) {
-                    std::cout << '*';
-                }
-            }
-            _M_print(node->right);
-            std::cout << ')';
-        } else {
-            std::cout << '.';
-        }
-    }
-
-    void _M_print() {
-        _M_print(this->block->root);
-        std::cout << '\n';
-    }
+    // void _M_print(_RbTreeNode *__node) {
+    //     if (__node) {
+    //         _T &__value = static_cast<_RbTreeNodeImpl<_T> *>(__node)->_M_value;
+    //         if constexpr (requires (_T t) { t.first; t.second; }) {
+    //             std::cout << __value.first << ':' << __value.second;
+    //         } else {
+    //             std::cout << __value;
+    //         }
+    //         std::cout << '(' << (__node->_M_color == _S_black ? 'B' : 'R') << ' ';
+    //         if (__node->_M_left) {
+    //             if (__node->_M_left->_M_parent != __node || __node->_M_left->_M_pparent != &__node->_M_left) {
+    //                 std::cout << '*';
+    //             }
+    //         }
+    //         _M_print(__node->_M_left);
+    //         std::cout << ' ';
+    //         if (__node->_M_right) {
+    //             if (__node->_M_right->_M_parent != __node || __node->_M_right->_M_pparent != &__node->_M_right) {
+    //                 std::cout << '*';
+    //             }
+    //         }
+    //         _M_print(__node->_M_right);
+    //         std::cout << ')';
+    //     } else {
+    //         std::cout << '.';
+    //     }
+    // }
+    //
+    // void _M_print() {
+    //     _M_print(this->_M_block->_M_root);
+    //     std::cout << '\n';
+    // }
 };
 
-template <class T, class Compare = std::less<T>>
-struct Set : TreeImpl<T, Compare> {
-    using typename TreeImpl<T, Compare>::const_iterator;
+template <class _T, class _Compare = std::less<_T>>
+struct Set : _RbTreeImpl<_T, _Compare> {
+    using typename _RbTreeImpl<_T, _Compare>::const_iterator;
     using iterator = const_iterator;
-    using value_type = T;
+    using value_type = _T;
 
     Set() = default;
-    explicit Set(Compare comp) : TreeImpl<T, Compare>(comp) {}
+    explicit Set(_Compare __comp) : _RbTreeImpl<_T, _Compare>(__comp) {}
 
     Set(Set &&) = default;
     Set &operator=(Set &&) = default;
 
-    Set(Set const &that) : TreeImpl<T, Compare>() {
-        this->_M_single_insert(that.begin(), that.end());
+    Set(Set const &__that) : _RbTreeImpl<_T, _Compare>() {
+        this->_M_single_insert(__that.begin(), __that.end());
     }
 
-    Set &operator=(Set const &that) {
-        if (&that != this) {
-            this->assign(that.begin(), that.end());
+    Set &operator=(Set const &__that) {
+        if (&__that != this) {
+            this->assign(__that.begin(), __that.end());
         }
         return *this;
     }
 
-    Set &operator=(std::initializer_list<T> ilist) {
-        this->assign(ilist);
+    Set &operator=(std::initializer_list<_T> __ilist) {
+        this->assign(__ilist);
         return *this;
     }
 
-    void assign(std::initializer_list<T> ilist) {
+    void assign(std::initializer_list<_T> __ilist) {
         this->clear();
-        this->_M_single_insert(ilist.begin(), ilist.end());
+        this->_M_single_insert(__ilist.begin(), __ilist.end());
     }
 
-    Compare value_comp() const noexcept {
+    _Compare value_comp() const noexcept {
         return this->_M_comp;
     }
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    const_iterator find(T &&value) const noexcept {
-        return this->_M_find(value);
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    const_iterator find(_T &&__value) const noexcept {
+        return this->_M_find(__value);
     }
 
-    const_iterator find(T const &value) const noexcept {
-        return this->_M_find(value);
+    const_iterator find(_T const &__value) const noexcept {
+        return this->_M_find(__value);
     }
 
-    std::pair<iterator, bool> insert(T &&value) {
-        return this->_M_single_emplace(std::move(value));
+    std::pair<iterator, bool> insert(_T &&__value) {
+        return this->_M_single_emplace(std::move(__value));
     }
 
-    std::pair<iterator, bool> insert(T const &value) {
-        return this->_M_single_emplace(value);
+    std::pair<iterator, bool> insert(_T const &__value) {
+        return this->_M_single_emplace(__value);
     }
 
     template <class ...Ts>
-    std::pair<iterator, bool> emplace(Ts &&...value) {
-        return this->_M_single_emplace(std::forward<Ts>(value)...);
+    std::pair<iterator, bool> emplace(Ts &&...__value) {
+        return this->_M_single_emplace(std::forward<Ts>(__value)...);
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    void insert(InputIt first, InputIt last) {
-        return this->_M_single_insert(first, last);
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    void insert(_InputIt __first, _InputIt __last) {
+        return this->_M_single_insert(__first, __last);
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    void assign(InputIt first, InputIt last) {
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    void assign(_InputIt __first, _InputIt __last) {
         this->clear();
-        return this->_M_single_insert(first, last);
+        return this->_M_single_insert(__first, __last);
     }
 
-    using TreeImpl<T, Compare>::erase;
+    using _RbTreeImpl<_T, _Compare>::erase;
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    size_t erase(Tv &&value) {
-        return this->_M_single_erase(value);
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    size_t erase(_Tv &&__value) {
+        return this->_M_single_erase(__value);
     }
 
-    size_t erase(T const &value) {
-        return this->_M_single_erase(value);
+    size_t erase(_T const &__value) {
+        return this->_M_single_erase(__value);
     }
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    size_t count(Tv &&value) const noexcept {
-        return this->_M_contains(value) ? 1 : 0;
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    size_t count(_Tv &&__value) const noexcept {
+        return this->_M_contains(__value) ? 1 : 0;
     }
 
-    size_t count(T const &value) const noexcept {
-        return this->_M_contains(value) ? 1 : 0;
+    size_t count(_T const &__value) const noexcept {
+        return this->_M_contains(__value) ? 1 : 0;
     }
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    bool contains(Tv &&value) const noexcept {
-        return this->_M_contains(value);
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    bool contains(_Tv &&__value) const noexcept {
+        return this->_M_contains(__value);
     }
 
-    bool contains(T const &value) const noexcept {
-        return this->_M_contains(value);
+    bool contains(_T const &__value) const noexcept {
+        return this->_M_contains(__value);
     }
 };
 
-template <class T, class Compare = std::less<T>>
-struct MultiSet : TreeImpl<T, Compare> {
-    using typename TreeImpl<T, Compare>::const_iterator;
+template <class _T, class _Compare = std::less<_T>>
+struct MultiSet : _RbTreeImpl<_T, _Compare> {
+    using typename _RbTreeImpl<_T, _Compare>::const_iterator;
     using iterator = const_iterator;
 
     MultiSet() = default;
-    explicit MultiSet(Compare comp) : TreeImpl<T, Compare>(comp) {}
+    explicit MultiSet(_Compare __comp) : _RbTreeImpl<_T, _Compare>(__comp) {}
 
     MultiSet(MultiSet &&) = default;
     MultiSet &operator=(MultiSet &&) = default;
 
-    MultiSet(MultiSet const &that) : TreeImpl<T, Compare>() {
-        this->_M_multi_insert(that.begin(), that.end());
+    MultiSet(MultiSet const &__that) : _RbTreeImpl<_T, _Compare>() {
+        this->_M_multi_insert(__that.begin(), __that.end());
     }
 
-    MultiSet &operator=(MultiSet const &that) {
-        if (&that != this) {
-            this->assign(that.begin(), that.end());
+    MultiSet &operator=(MultiSet const &__that) {
+        if (&__that != this) {
+            this->assign(__that.begin(), __that.end());
         }
         return *this;
     }
 
-    MultiSet &operator=(std::initializer_list<T> ilist) {
-        this->assign(ilist);
+    MultiSet &operator=(std::initializer_list<_T> __ilist) {
+        this->assign(__ilist);
         return *this;
     }
 
-    void assign(std::initializer_list<T> ilist) {
+    void assign(std::initializer_list<_T> __ilist) {
         this->clear();
-        this->_M_multi_insert(ilist.begin(), ilist.end());
+        this->_M_multi_insert(__ilist.begin(), __ilist.end());
     }
 
-    Compare value_comp() const noexcept {
+    _Compare value_comp() const noexcept {
         return this->_M_comp;
     }
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    const_iterator find(T &&value) const noexcept {
-        return this->_M_find(value);
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    const_iterator find(_T &&__value) const noexcept {
+        return this->_M_find(__value);
     }
 
-    const_iterator find(T const &value) const noexcept {
-        return this->_M_find(value);
+    const_iterator find(_T const &__value) const noexcept {
+        return this->_M_find(__value);
     }
 
-    iterator insert(T &&value) {
-        return this->_M_multi_emplace(std::move(value));
+    iterator insert(_T &&__value) {
+        return this->_M_multi_emplace(std::move(__value));
     }
 
-    iterator insert(T const &value) {
-        return this->_M_multi_emplace(value);
+    iterator insert(_T const &__value) {
+        return this->_M_multi_emplace(__value);
     }
 
     template <class ...Ts>
-    iterator emplace(Ts &&...value) {
-        return this->_M_multi_emplace(std::forward<Ts>(value)...);
+    iterator emplace(Ts &&...__value) {
+        return this->_M_multi_emplace(std::forward<Ts>(__value)...);
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    void insert(InputIt first, InputIt last) {
-        return this->_M_multi_insert(first, last);
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    void insert(_InputIt __first, _InputIt __last) {
+        return this->_M_multi_insert(__first, __last);
     }
 
-    using TreeImpl<T, Compare>::assign;
+    using _RbTreeImpl<_T, _Compare>::assign;
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    void assign(InputIt first, InputIt last) {
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    void assign(_InputIt __first, _InputIt __last) {
         this->clear();
-        return this->_M_multi_insert(first, last);
+        return this->_M_multi_insert(__first, __last);
     }
 
-    using TreeImpl<T, Compare>::erase;
+    using _RbTreeImpl<_T, _Compare>::erase;
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    size_t erase(Tv &&value) {
-        return this->_M_multi_erase(value);
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    size_t erase(_Tv &&__value) {
+        return this->_M_multi_erase(__value);
     }
 
-    size_t erase(T const &value) {
-        return this->_M_multi_erase(value);
+    size_t erase(_T const &__value) {
+        return this->_M_multi_erase(__value);
     }
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    size_t count(Tv &&value) const noexcept {
-        return this->_M_multi_count(value);
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    size_t count(_Tv &&__value) const noexcept {
+        return this->_M_multi_count(__value);
     }
 
-    size_t count(T const &value) const noexcept {
-        return this->_M_multi_count(value);
+    size_t count(_T const &__value) const noexcept {
+        return this->_M_multi_count(__value);
     }
 
-    template <class Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    bool contains(Tv &&value) const noexcept {
-        return this->_M_contains(value);
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    bool contains(_Tv &&__value) const noexcept {
+        return this->_M_contains(__value);
     }
 
-    bool contains(T const &value) const noexcept {
-        return this->_M_contains(value);
-    }
-};
-
-template <class Compare, class Value, class = void>
-struct TreeValueCompare {
-    [[no_unique_address]] Compare _M_comp;
-
-    TreeValueCompare(Compare comp = {}) noexcept : _M_comp(comp) {}
-
-    bool operator()(typename Value::first_type const &lhs, Value const &rhs) const noexcept {
-        return this->_M_comp(lhs, rhs.first);
-    }
-
-    bool operator()(Value const &lhs, typename Value::first_type const &rhs) const noexcept {
-        return this->_M_comp(lhs.first, rhs);
-    }
-
-    bool operator()(Value const &lhs, Value const &rhs) const noexcept {
-        return this->_M_comp(lhs.first, rhs.first);
+    bool contains(_T const &__value) const noexcept {
+        return this->_M_contains(__value);
     }
 };
 
-template <class Compare, class Value>
-struct TreeValueCompare<Compare, Value, decltype((void)static_cast<typename Compare::is_transparent *>(nullptr))> {
-    [[no_unique_address]] Compare _M_comp;
+template <class _Compare, class _Value, class = void>
+struct _RbTreeValueCompare {
+    [[no_unique_address]] _Compare _M_comp;
 
-    TreeValueCompare(Compare comp = {}) noexcept : _M_comp(comp) {}
+    _RbTreeValueCompare(_Compare __comp = {}) noexcept : _M_comp(__comp) {}
 
-    template <class Lhs>
-    bool operator()(Lhs &&lhs, Value const &rhs) const noexcept {
-        return this->_M_comp(lhs, rhs.first);
+    bool operator()(typename _Value::first_type const &__lhs, _Value const &__rhs) const noexcept {
+        return this->_M_comp(__lhs, __rhs.first);
     }
 
-    template <class Rhs>
-    bool operator()(Value const &lhs, Rhs &&rhs) const noexcept {
-        return this->_M_comp(lhs.first, rhs);
+    bool operator()(_Value const &__lhs, typename _Value::first_type const &__rhs) const noexcept {
+        return this->_M_comp(__lhs.first, __rhs);
     }
 
-    bool operator()(Value const &lhs, Value const &rhs) const noexcept {
-        return this->_M_comp(lhs.first, rhs.first);
+    bool operator()(_Value const &__lhs, _Value const &__rhs) const noexcept {
+        return this->_M_comp(__lhs.first, __rhs.first);
     }
-
-    using is_transparent = typename Compare::is_transparent;
 };
 
-template <class Key, class Mapped, class Compare = std::less<Key>>
-struct Map : TreeImpl<std::pair<const Key, Mapped>,
-        TreeValueCompare<Compare, std::pair<const Key, Mapped>>> {
-    using key_type = Key;
-    using mapped_type = Mapped;
-    using value_type = std::pair<const Key, Mapped>;
+template <class _Compare, class _Value>
+struct _RbTreeValueCompare<_Compare, _Value, decltype((void)static_cast<typename _Compare::is_transparent *>(nullptr))> {
+    [[no_unique_address]] _Compare _M_comp;
+
+    _RbTreeValueCompare(_Compare __comp = {}) noexcept : _M_comp(__comp) {}
+
+    template <class _Lhs>
+    bool operator()(_Lhs &&__lhs, _Value const &__rhs) const noexcept {
+        return this->_M_comp(__lhs, __rhs.first);
+    }
+
+    template <class _Rhs>
+    bool operator()(_Value const &__lhs, _Rhs &&__rhs) const noexcept {
+        return this->_M_comp(__lhs.first, __rhs);
+    }
+
+    bool operator()(_Value const &__lhs, _Value const &__rhs) const noexcept {
+        return this->_M_comp(__lhs.first, __rhs.first);
+    }
+
+    using is_transparent = typename _Compare::is_transparent;
+};
+
+template <class _Key, class _Mapped, class _Compare = std::less<_Key>>
+struct Map : _RbTreeImpl<std::pair<const _Key, _Mapped>,
+        _RbTreeValueCompare<_Compare, std::pair<const _Key, _Mapped>>> {
+    using key_type = _Key;
+    using mapped_type = _Mapped;
+    using value_type = std::pair<const _Key, _Mapped>;
 
 private:
-    using ValueComp = TreeValueCompare<Compare, value_type>;
+    using _ValueComp = _RbTreeValueCompare<_Compare, value_type>;
 
 public:
-    using typename TreeImpl<value_type, ValueComp>::iterator;
-    using typename TreeImpl<value_type, ValueComp>::const_iterator;
+    using typename _RbTreeImpl<value_type, _ValueComp>::iterator;
+    using typename _RbTreeImpl<value_type, _ValueComp>::const_iterator;
 
     Map() = default;
-    explicit Map(Compare comp) : TreeImpl<value_type, ValueComp>(comp) {}
+    explicit Map(_Compare __comp) : _RbTreeImpl<value_type, _ValueComp>(__comp) {}
 
-    Map(std::initializer_list<value_type> ilist) {
-        _M_single_insert(ilist.begin(), ilist.end());
+    Map(std::initializer_list<value_type> __ilist) {
+        _M_single_insert(__ilist.begin(), __ilist.end());
     }
 
-    explicit Map(std::initializer_list<value_type> ilist, Compare comp)
-        : TreeImpl<value_type, ValueComp>(comp) {
-        _M_single_insert(ilist.begin(), ilist.end());
+    explicit Map(std::initializer_list<value_type> __ilist, _Compare __comp)
+        : _RbTreeImpl<value_type, _ValueComp>(__comp) {
+        _M_single_insert(__ilist.begin(), __ilist.end());
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    explicit Map(InputIt first, InputIt last) {
-        _M_single_insert(first, last);
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    explicit Map(_InputIt __first, _InputIt __last) {
+        _M_single_insert(__first, __last);
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    explicit Map(InputIt first, InputIt last, Compare comp)
-        : TreeImpl<value_type, ValueComp>(comp) {
-        _M_single_insert(first, last);
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    explicit Map(_InputIt __first, _InputIt __last, _Compare __comp)
+        : _RbTreeImpl<value_type, _ValueComp>(__comp) {
+        _M_single_insert(__first, __last);
     }
 
     Map(Map &&) = default;
     Map &operator=(Map &&) = default;
 
-    Map(Map const &that) : TreeImpl<value_type, ValueComp>() {
-        this->_M_single_insert(that.begin(), that.end());
+    Map(Map const &__that) : _RbTreeImpl<value_type, _ValueComp>() {
+        this->_M_single_insert(__that.begin(), __that.end());
     }
 
-    Map &operator=(Map const &that) {
-        if (&that != this) {
-            this->assign(that.begin(), that.end());
+    Map &operator=(Map const &__that) {
+        if (&__that != this) {
+            this->assign(__that.begin(), __that.end());
         }
         return *this;
     }
 
-    Map &operator=(std::initializer_list<value_type> ilist) {
-        this->assign(ilist);
+    Map &operator=(std::initializer_list<value_type> __ilist) {
+        this->assign(__ilist);
         return *this;
     }
 
-    void assign(std::initializer_list<value_type> ilist) {
+    void assign(std::initializer_list<value_type> __ilist) {
         this->clear();
-        this->_M_single_insert(ilist.begin(), ilist.end());
+        this->_M_single_insert(__ilist.begin(), __ilist.end());
     }
 
-    Compare key_comp() const noexcept {
+    _Compare key_comp() const noexcept {
         return this->_M_comp->_M_comp;
     }
 
-    ValueComp value_comp() const noexcept {
+    _ValueComp value_comp() const noexcept {
         return this->_M_comp;
     }
 
-    template <class Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    iterator find(Kv &&key) noexcept {
-        return this->_M_find(key);
+    template <class _Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    iterator find(_Kv &&__key) noexcept {
+        return this->_M_find(__key);
     }
 
-    template <class Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    const_iterator find(Kv &&key) const noexcept {
-        return this->_M_find(key);
+    template <class _Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    const_iterator find(_Kv &&__key) const noexcept {
+        return this->_M_find(__key);
     }
 
-    iterator find(Key const &key) noexcept {
-        return this->_M_find(key);
+    iterator find(_Key const &__key) noexcept {
+        return this->_M_find(__key);
     }
 
-    const_iterator find(Key const &key) const noexcept {
-        return this->_M_find(key);
+    const_iterator find(_Key const &__key) const noexcept {
+        return this->_M_find(__key);
     }
 
-    std::pair<iterator, bool> insert(value_type &&value) {
-        return this->_M_single_emplace(std::move(value));
+    std::pair<iterator, bool> insert(value_type &&__value) {
+        return this->_M_single_emplace(std::move(__value));
     }
 
-    std::pair<iterator, bool> insert(value_type const &value) {
-        return this->_M_single_emplace(value);
+    std::pair<iterator, bool> insert(value_type const &__value) {
+        return this->_M_single_emplace(__value);
     }
 
-    template <class Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    Mapped const &at(Kv const &key) const {
-        auto it = this->_M_find(key);
-        if (it == this->end()) {
+    template <class _Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    _Mapped const &at(_Kv const &__key) const {
+        const_iterator __it = this->_M_find(__key);
+        if (__it == this->end()) {
             throw std::out_of_range("map::at");
         }
-        return it->second;
+        return __it->second;
     }
 
-    template <class Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    Mapped &at(Kv const &key) {
-        auto it = this->_M_find(key);
-        if (it == this->end()) {
+    template <class _Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    _Mapped &at(_Kv const &__key) {
+        iterator __it = this->_M_find(__key);
+        if (__it == this->end()) {
             throw std::out_of_range("map::at");
         }
-        return it->second;
+        return __it->second;
     }
 
-    Mapped const &at(Key const &key) const {
-        auto it = this->_M_find(key);
-        if (it == this->end()) {
+    _Mapped const &at(_Key const &__key) const {
+        const_iterator __it = this->_M_find(__key);
+        if (__it == this->end()) {
             throw std::out_of_range("map::at");
         }
-        return it->second;
+        return __it->second;
     }
 
-    Mapped &at(Key const &key) {
-        auto it = this->_M_find(key);
-        if (it == this->end()) {
+    _Mapped &at(_Key const &__key) {
+        iterator __it = this->_M_find(__key);
+        if (__it == this->end()) {
             throw std::out_of_range("map::at");
         }
-        return it->second;
+        return __it->second;
     }
 
-    template <class Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    Mapped &operator[](Kv const &key) {
-        auto it = this->_M_find(key);
-        if (it == this->end()) {
-            it = this->_M_single_emplace(std::piecewise_construct,
-                                         std::forward_as_tuple(key),
+    template <class _Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    _Mapped &operator[](_Kv const &__key) {
+        iterator __it = this->_M_find(__key);
+        if (__it == this->end()) {
+            __it = this->_M_single_emplace(std::piecewise_construct,
+                                         std::forward_as_tuple(__key),
                                          std::forward_as_tuple()).first;
         }
-        return it->second;
+        return __it->second;
     }
 
-    Mapped &operator[](Key const &key) {
-        auto it = this->_M_find(key);
-        if (it == this->end()) {
-            it = this->_M_single_emplace(std::piecewise_construct,
-                                         std::forward_as_tuple(key),
+    _Mapped &operator[](_Key const &__key) {
+        iterator __it = this->_M_find(__key);
+        if (__it == this->end()) {
+            __it = this->_M_single_emplace(std::piecewise_construct,
+                                         std::forward_as_tuple(__key),
                                          std::forward_as_tuple()).first;
         }
-        return it->second;
+        return __it->second;
     }
 
-    template <class M, class = std::enable_if_t<std::is_convertible_v<M, Mapped>>>
-    std::pair<iterator, bool> insert_or_assign(Key const &key, M &&mapped) {
-        auto result = this->_M_single_emplace(std::piecewise_construct,
-                                              std::forward_as_tuple(key),
-                                              std::forward_as_tuple(std::forward<M>(mapped)));
-        if (!result.second) {
-            result.first->second = std::forward<M>(mapped);
+    template <class _M, class = std::enable_if_t<std::is_convertible_v<_M, _Mapped>>>
+    std::pair<iterator, bool> insert_or_assign(_Key const &__key, _M &&__mapped) {
+        std::pair<iterator, bool> __result = this->_M_single_emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(__key),
+            std::forward_as_tuple(std::forward<_M>(__mapped)));
+        if (!__result.second) {
+            __result.first->second = std::forward<_M>(__mapped);
         }
-        return result;
+        return __result;
     }
 
-    template <class M, class = std::enable_if_t<std::is_convertible_v<M, Mapped>>>
-    std::pair<iterator, bool> insert_or_assign(Key &&key, M &&mapped) {
-        auto result = this->_M_single_emplace(std::piecewise_construct,
-                                              std::forward_as_tuple(std::move(key)),
-                                              std::forward_as_tuple(std::forward<M>(mapped)));
-        if (!result.second) {
-            result.first->second = std::forward<M>(mapped);
+    template <class _M, class = std::enable_if_t<std::is_convertible_v<_M, _Mapped>>>
+    std::pair<iterator, bool> insert_or_assign(_Key &&__key, _M &&__mapped) {
+        std::pair<iterator, bool> __result = this->_M_single_emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(std::move(__key)),
+            std::forward_as_tuple(std::forward<_M>(__mapped)));
+        if (!__result.second) {
+            __result.first->second = std::forward<_M>(__mapped);
         }
-        return result;
+        return __result;
     }
 
     template <class ...Vs>
-    std::pair<iterator, bool> emplace(Vs &&...value) {
-        return this->_M_single_emplace(std::forward<Vs>(value)...);
+    std::pair<iterator, bool> emplace(Vs &&...__value) {
+        return this->_M_single_emplace(std::forward<Vs>(__value)...);
     }
 
     template <class ...Ms>
-    std::pair<iterator, bool> try_emplace(Key &&key, Ms &&...mapped) {
+    std::pair<iterator, bool> try_emplace(_Key &&__key, Ms &&...__mapped) {
         return this->_M_single_emplace(std::piecewise_construct,
-                                       std::forward_as_tuple(std::move(key)),
-                                       std::forward_as_tuple(std::forward<Ms>(mapped)...));
+                                       std::forward_as_tuple(std::move(__key)),
+                                       std::forward_as_tuple(std::forward<Ms>(__mapped)...));
     }
 
     template <class ...Ms>
-    std::pair<iterator, bool> try_emplace(Key const &key, Ms &&...mapped) {
+    std::pair<iterator, bool> try_emplace(_Key const &__key, Ms &&...__mapped) {
         return this->_M_single_emplace(std::piecewise_construct,
-                                       std::forward_as_tuple(key),
-                                       std::forward_as_tuple(std::forward<Ms>(mapped)...));
+                                       std::forward_as_tuple(__key),
+                                       std::forward_as_tuple(std::forward<Ms>(__mapped)...));
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    iterator insert(InputIt first, InputIt last) {
-        return this->_M_single_insert(first, last);
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    iterator insert(_InputIt __first, _InputIt __last) {
+        return this->_M_single_insert(__first, __last);
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    iterator assign(InputIt first, InputIt last) {
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    iterator assign(_InputIt __first, _InputIt __last) {
         this->clear();
-        return this->_M_single_insert(first, last);
+        return this->_M_single_insert(__first, __last);
     }
 
-    using TreeImpl<value_type, ValueComp>::erase;
+    using _RbTreeImpl<value_type, _ValueComp>::erase;
 
-    template <class Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    size_t erase(Kv &&key) {
-        return this->_M_single_erase(key);
+    template <class _Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    size_t erase(_Kv &&__key) {
+        return this->_M_single_erase(__key);
     }
 
-    size_t erase(Key const &key) {
-        return this->_M_single_erase(key);
+    size_t erase(_Key const &__key) {
+        return this->_M_single_erase(__key);
     }
 
-    template <class Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    size_t count(Kv &&value) const noexcept {
-        return this->_M_contains(value) ? 1 : 0;
+    template <class _Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    size_t count(_Kv &&__value) const noexcept {
+        return this->_M_contains(__value) ? 1 : 0;
     }
 
-    size_t count(Key const &value) const noexcept {
-        return this->_M_contains(value) ? 1 : 0;
+    size_t count(_Key const &__value) const noexcept {
+        return this->_M_contains(__value) ? 1 : 0;
     }
 
-    template <class Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    bool contains(Kv &&value) const noexcept {
-        return this->_M_contains(value);
+    template <class _Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    bool contains(_Kv &&__value) const noexcept {
+        return this->_M_contains(__value);
     }
 
-    bool contains(Key const &value) const noexcept {
-        return this->_M_contains(value);
+    bool contains(_Key const &__value) const noexcept {
+        return this->_M_contains(__value);
     }
 };
 
-template <class Key, class Mapped, class Compare = std::less<Key>>
-struct MultiMap : TreeImpl<std::pair<const Key, Mapped>,
-        TreeValueCompare<Compare, std::pair<const Key, Mapped>>> {
-    using key_type = Key;
-    using mapped_type = Mapped;
-    using value_type = std::pair<const Key, Mapped>;
+template <class _Key, class _Mapped, class _Compare = std::less<_Key>>
+struct MultiMap : _RbTreeImpl<std::pair<const _Key, _Mapped>,
+        _RbTreeValueCompare<_Compare, std::pair<const _Key, _Mapped>>> {
+    using key_type = _Key;
+    using mapped_type = _Mapped;
+    using value_type = std::pair<const _Key, _Mapped>;
 
 private:
-    using ValueComp = TreeValueCompare<Compare, value_type>;
+    using _ValueComp = _RbTreeValueCompare<_Compare, value_type>;
 public:
 
-    using typename TreeImpl<value_type, ValueComp>::iterator;
-    using typename TreeImpl<value_type, ValueComp>::const_iterator;
+    using typename _RbTreeImpl<value_type, _ValueComp>::iterator;
+    using typename _RbTreeImpl<value_type, _ValueComp>::const_iterator;
 
     MultiMap() = default;
-    explicit MultiMap(Compare comp) : TreeImpl<value_type, ValueComp>(comp) {}
+    explicit MultiMap(_Compare __comp) : _RbTreeImpl<value_type, _ValueComp>(__comp) {}
 
-    MultiMap(std::initializer_list<value_type> ilist) {
-        _M_multi_insert(ilist.begin(), ilist.end());
+    MultiMap(std::initializer_list<value_type> __ilist) {
+        _M_multi_insert(__ilist.begin(), __ilist.end());
     }
 
-    explicit MultiMap(std::initializer_list<value_type> ilist, Compare comp) : TreeImpl<value_type, ValueComp>(comp) {
-        _M_multi_insert(ilist.begin(), ilist.end());
+    explicit MultiMap(std::initializer_list<value_type> __ilist, _Compare __comp) : _RbTreeImpl<value_type, _ValueComp>(__comp) {
+        _M_multi_insert(__ilist.begin(), __ilist.end());
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    explicit MultiMap(InputIt first, InputIt last) {
-        _M_multi_insert(first, last);
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    explicit MultiMap(_InputIt __first, _InputIt __last) {
+        _M_multi_insert(__first, __last);
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    explicit MultiMap(InputIt first, InputIt last, Compare comp)
-        : TreeImpl<value_type, ValueComp>(comp) {
-        _M_multi_insert(first, last);
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    explicit MultiMap(_InputIt __first, _InputIt __last, _Compare __comp)
+        : _RbTreeImpl<value_type, _ValueComp>(__comp) {
+        _M_multi_insert(__first, __last);
     }
 
     MultiMap(MultiMap &&) = default;
     MultiMap &operator=(MultiMap &&) = default;
 
-    MultiMap(MultiMap const &that) : TreeImpl<value_type, ValueComp>() {
-        this->_M_multi_insert(that.begin(), that.end());
+    MultiMap(MultiMap const &__that) : _RbTreeImpl<value_type, _ValueComp>() {
+        this->_M_multi_insert(__that.begin(), __that.end());
     }
 
-    MultiMap &operator=(MultiMap const &that) {
-        if (&that != this) {
-            this->assign(that.begin(), that.end());
+    MultiMap &operator=(MultiMap const &__that) {
+        if (&__that != this) {
+            this->assign(__that.begin(), __that.end());
         }
         return *this;
     }
 
-    MultiMap &operator=(std::initializer_list<value_type> ilist) {
-        this->assign(ilist);
+    MultiMap &operator=(std::initializer_list<value_type> __ilist) {
+        this->assign(__ilist);
         return *this;
     }
 
-    void assign(std::initializer_list<value_type> ilist) {
+    void assign(std::initializer_list<value_type> __ilist) {
         this->clear();
-        this->_M_multi_insert(ilist.begin(), ilist.end());
+        this->_M_multi_insert(__ilist.begin(), __ilist.end());
     }
 
-    Compare key_comp() const noexcept {
+    _Compare key_comp() const noexcept {
         return this->_M_comp->_M_comp;
     }
 
-    ValueComp value_comp() const noexcept {
+    _ValueComp value_comp() const noexcept {
         return this->_M_comp;
     }
 
-    template <class Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    iterator find(Kv &&key) noexcept {
-        return this->_M_find(key);
+    template <class _Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    iterator find(_Kv &&__key) noexcept {
+        return this->_M_find(__key);
     }
 
-    template <class Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    const_iterator find(Kv &&key) const noexcept {
-        return this->_M_find(key);
+    template <class _Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    const_iterator find(_Kv &&__key) const noexcept {
+        return this->_M_find(__key);
     }
 
-    iterator find(Key const &key) noexcept {
-        return this->_M_find(key);
+    iterator find(_Key const &__key) noexcept {
+        return this->_M_find(__key);
     }
 
-    const_iterator find(Key const &key) const noexcept {
-        return this->_M_find(key);
+    const_iterator find(_Key const &__key) const noexcept {
+        return this->_M_find(__key);
     }
 
-    std::pair<iterator, bool> insert(value_type &&value) {
-        return this->_M_single_emplace(std::move(value));
+    std::pair<iterator, bool> insert(value_type &&__value) {
+        return this->_M_single_emplace(std::move(__value));
     }
 
-    std::pair<iterator, bool> insert(value_type const &value) {
-        return this->_M_single_emplace(value);
-    }
-
-    template <class ...Ts>
-    std::pair<iterator, bool> emplace(Ts &&...value) {
-        return this->_M_single_emplace(std::forward<Ts>(value)...);
+    std::pair<iterator, bool> insert(value_type const &__value) {
+        return this->_M_single_emplace(__value);
     }
 
     template <class ...Ts>
-    std::pair<iterator, bool> try_emplace(Key &&key, Ts &&...value) {
+    std::pair<iterator, bool> emplace(Ts &&...__value) {
+        return this->_M_single_emplace(std::forward<Ts>(__value)...);
+    }
+
+    template <class ...Ts>
+    std::pair<iterator, bool> try_emplace(_Key &&__key, Ts &&...__value) {
         return this->_M_single_emplace(std::piecewise_construct,
-                                       std::forward_as_tuple(std::move(key)),
-                                       std::forward_as_tuple(std::forward<Ts>(value)...));
+                                       std::forward_as_tuple(std::move(__key)),
+                                       std::forward_as_tuple(std::forward<Ts>(__value)...));
     }
 
     template <class ...Ts>
-    std::pair<iterator, bool> try_emplace(Key const &key, Ts &&...value) {
+    std::pair<iterator, bool> try_emplace(_Key const &__key, Ts &&...__value) {
         return this->_M_single_emplace(std::piecewise_construct,
-                                       std::forward_as_tuple(key),
-                                       std::forward_as_tuple(std::forward<Ts>(value)...));
+                                       std::forward_as_tuple(__key),
+                                       std::forward_as_tuple(std::forward<Ts>(__value)...));
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    iterator insert(InputIt first, InputIt last) {
-        return this->_M_single_insert(first, last);
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    iterator insert(_InputIt __first, _InputIt __last) {
+        return this->_M_single_insert(__first, __last);
     }
 
-    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, InputIt)>
-    iterator assign(InputIt first, InputIt last) {
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    iterator assign(_InputIt __first, _InputIt __last) {
         this->clear();
-        return this->_M_single_insert(first, last);
+        return this->_M_single_insert(__first, __last);
     }
 
-    using TreeImpl<value_type, ValueComp>::erase;
+    using _RbTreeImpl<value_type, _ValueComp>::erase;
 
-    template <class Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    size_t erase(Kv &&key) {
-        return this->_M_single_erase(key);
+    template <class _Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    size_t erase(_Kv &&__key) {
+        return this->_M_single_erase(__key);
     }
 
-    size_t erase(Key const &key) {
-        return this->_M_single_erase(key);
+    size_t erase(_Key const &__key) {
+        return this->_M_single_erase(__key);
     }
 
-    template <class Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    size_t count(Kv &&value) const noexcept {
-        return this->_M_multi_count(value);
+    template <class _Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    size_t count(_Kv &&__value) const noexcept {
+        return this->_M_multi_count(__value);
     }
 
-    size_t count(Key const &value) const noexcept {
-        return this->_M_multi_count(value);
+    size_t count(_Key const &__value) const noexcept {
+        return this->_M_multi_count(__value);
     }
 
-    template <class Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(Compare)>
-    bool contains(Kv &&value) const noexcept {
-        return this->_M_contains(value);
+    template <class _Kv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare)>
+    bool contains(_Kv &&__value) const noexcept {
+        return this->_M_contains(__value);
     }
 
-    bool contains(Key const &value) const noexcept {
-        return this->_M_contains(value);
+    bool contains(_Key const &__value) const noexcept {
+        return this->_M_contains(__value);
     }
 };
