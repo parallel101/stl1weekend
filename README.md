@@ -64,3 +64,17 @@
 - [test_Optional.cpp](test_Optional.cpp)
 
 小彭老师C++实战演练系列之“自己实现所有STL容器”。比起艰深的STL源码解读，不如自己动手实现STL，更能生动直观地掌握底层技术细节，破除模棱两可心理，了解常见的最佳实践。这是本系列试水的第六课，自己实现std::optional可选值容器。本期视频中我们介绍了如何借助tag类、union惰性初始化、万能引用、完美转发等技巧，实现一个可以存放任意类型的可选值容器。最终借助所学知识，封装出了和标准库一样的可选值容器std::optional，完美支持存放任意类型的值，同时支持为空。in_place和nullopt等tag类重载构造函数的妙用真是醍醐灌顶，我们不仅实现了value、value_or、emplace、*和->运算符，还实现了C++23新增的transform、and_then、or_else，彻底迈向函数式！介绍了C++17的CTAD机制，感受if-auto语法的简洁有力。最终，还顺便介绍了名字空间的ADL机制如何帮助多态，并实现了自适配swap。且C++14就能编译，如果你的编译器无法升级到C++17，可以集成小彭老师的Optional类，直奔C++23。
+
+## 第七课：Map 与 Set
+
+视频链接：[BV1v6421Z7f8](https://www.bilibili.com/video/BV1v6421Z7f8)
+
+相关文件：
+
+- [Map.hpp](Map.hpp)
+- [test_Map.cpp](test_Map.cpp)
+- [Set.hpp](Set.hpp)
+- [test_Set.cpp](test_Set.cpp)
+- [_RbTree.hpp](_RbTree.hpp)
+
+小彭老师C++实战演练系列之“自己实现所有STL容器”。比起艰深的STL源码解读，不如自己动手实现STL，更能生动直观地掌握底层技术细节，破除模棱两可心理，了解常见的最佳实践。这是本系列试水的第七课，自己实现std::map与std::set容器。本期视频中我们介绍了如何借助红黑树这种平衡二叉搜索树，实现一个可以存放任意类型的有序键值对并去重容器。由于红黑树需要判断的情况多而杂，一不留神就会写错、写漏，可能是本系列有史以来最难的一集。尝试过程中遇到无数的bug，小彭老师不得不参考了许多实现，最终借助所学知识才实现出了能正确运作的红黑树 _RbTreeBase，并在其基础上实现了 Map 和 Set 容器。支持了自定义比较器和内存分配器，也支持了 MultiMap 和 MultiSet，封装出了和标准库一样的std::map与std::set接口，完美支持增删改查等常规操作。
