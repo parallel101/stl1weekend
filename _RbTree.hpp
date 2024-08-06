@@ -1013,29 +1013,3 @@ public:
         this->clear();
     }
 };
-
-template <class _Compare, class _Value, class = void>
-struct _RbTreeValueCompare {
-protected:
-    [[no_unique_address]] _Compare _M_comp;
-
-public:
-    _RbTreeValueCompare(_Compare __comp = _Compare()) noexcept
-        : _M_comp(__comp) {}
-
-    bool operator()(typename _Value::first_type const &__lhs,
-                    _Value const &__rhs) const noexcept {
-        return this->_M_comp(__lhs, __rhs.first);
-    }
-
-    bool operator()(_Value const &__lhs,
-                    typename _Value::first_type const &__rhs) const noexcept {
-        return this->_M_comp(__lhs.first, __rhs);
-    }
-
-    bool operator()(_Value const &__lhs, _Value const &__rhs) const noexcept {
-        return this->_M_comp(__lhs.first, __rhs.first);
-    }
-
-    struct _RbTreeIsMap;
-};
