@@ -54,7 +54,7 @@ struct List {
 
 private:
     using ListNode = ListBaseNode<T>;
-    using AllocNode = std::allocator_traits<Alloc>::template rebind_alloc<ListValueNode<T>>;
+    using AllocNode = typename std::allocator_traits<Alloc>::template rebind_alloc<ListValueNode<T>>;
 
     ListNode m_dummy;
     size_t m_size;

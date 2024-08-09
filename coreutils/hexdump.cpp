@@ -2,7 +2,6 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include <random>
 #include <cctype>
 #include <iomanip>
 #include <range/v3/view/chunk.hpp>
@@ -11,9 +10,9 @@
 
 void hexdump(std::ranges::input_range auto const &range, std::size_t width = 16) {
     using T = std::ranges::range_value_t<decltype(range)>;
-    // 00096e90  6d 5f 64 65 76 69 63 65  20 72 64 3b 0a 20 20 20  |m_device rd;.   |
     std::size_t addr = 0;
     std::vector<char> saved;
+    auto flags = std::cout.flags();
     for (auto chunk: range | ranges::views::chunk(width)) {
         std::cout << std::setw(8) << std::setfill('0') << std::hex << addr << ' ';
         for (auto c: chunk) {
@@ -42,6 +41,7 @@ void hexdump(std::ranges::input_range auto const &range, std::size_t width = 16)
         }
         std::cout << '\n';
     }
+    std::cout.flags(flags);
 }
 
 struct IstreamRange {
