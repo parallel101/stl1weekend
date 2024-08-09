@@ -1,6 +1,8 @@
+#pragma once
+
 #include <cstdio>
 #include <utility>
-#include <concepts>
+//#include <concepts>
 
 template <class T>
 struct DefaultDeleter { // 默认使用 delete 释放内存
@@ -16,12 +18,12 @@ struct DefaultDeleter<T[]> { // 偏特化
     }
 };
 
-template <>
-struct DefaultDeleter<FILE> { // 全特化
-    void operator()(FILE *p) const {
-        fclose(p);
-    }
-};
+//template <>
+//struct DefaultDeleter<FILE> { // 全特化
+//    void operator()(FILE *p) const {
+//        fclose(p);
+//    }
+//};
 
 template <class T, class U>
 T exchange(T &dst, U &&val) { // 同标准库的 std::exchange

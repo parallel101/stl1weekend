@@ -6,8 +6,16 @@
 #include <limits>
 #include <stdexcept>
 #include <utility>
-#include <compare>
 #include <initializer_list>
+
+#if __cpp_concepts && __cpp_lib_concepts
+#define _LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(category, T) category T
+#else
+#define _LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(category, T) class T, \
+    std::enable_if_t<std::is_convertible_v< \
+        typename std::iterator_traits<T>::iterator_category, \
+        category##_tag>>
+#endif
 
 template <class T, class Alloc = std::allocator<T>>
 struct Vector {
@@ -54,7 +62,7 @@ struct Vector {
         }
     }
 
-    template <std::random_access_iterator InputIt>
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::random_access_iterator, InputIt)>
     Vector(InputIt first, InputIt last, Alloc const &alloc = Alloc()) : m_alloc(alloc) {
         size_t n = last - first;
         m_data = m_alloc.allocate(n);
@@ -170,6 +178,7 @@ struct Vector {
 
     T const &at(size_t i) const {
         if (i >= m_size) [[unlikely]] throw std::out_of_range("vector::at");
+            _LIBPENGCXX_THROW_OUT_OF_RANGE(i, m_size);
         return m_data[i];
     }
 
@@ -387,7 +396,7 @@ struct Vector {
         }
     }
 
-    template <std::random_access_iterator InputIt>
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::random_access_iterator, InputIt)>
     void assign(InputIt first, InputIt last) {
         clear();
         size_t n = last - first;
@@ -463,7 +472,7 @@ struct Vector {
         return m_data + j;
     }
 
-    template <std::random_access_iterator InputIt>
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::random_access_iterator, InputIt)>
     T *insert(T const *it, InputIt first, InputIt last) {
         size_t j = it - m_data;
         size_t n = last - first;
