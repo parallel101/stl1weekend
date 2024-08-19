@@ -121,6 +121,7 @@ public:
     }
 
     void operator++() noexcept { // ++__it
+        // 为了支持 ++rbegin()
         if (_M_off_by_one) {
             _M_off_by_one = false;
             _M_node = *_M_proot;
@@ -209,14 +210,20 @@ public:
         std::is_const_v<T0>,
         _RbTreeIterator<_NodeImpl, std::remove_const_t<T0>, _Reverse>>()
         const noexcept {
-        return this->_M_node;
+        if (!this->_M_off_by_one)
+            return this->_M_node;
+        else
+            return this->_M_proot;
     }
 
     template <class T0 = _Tp>
     operator std::enable_if_t<!std::is_const_v<T0>,
                               _RbTreeIterator<_NodeImpl, std::add_const_t<T0>,
                                               _Reverse>>() const noexcept {
-        return this->_M_node;
+        if (!this->_M_off_by_one)
+            return this->_M_node;
+        else
+            return this->_M_proot;
     }
 
     _RbTreeIterator &operator++() noexcept { // ++__it
@@ -242,13 +249,21 @@ public:
     }
 
     _Tp *operator->() const noexcept {
+        assert(!this->_M_off_by_one);
         return std::addressof(
             static_cast<_NodeImpl *>(this->_M_node)->_M_value);
     }
 
     _Tp &operator*() const noexcept {
+        assert(!this->_M_off_by_one);
         return static_cast<_NodeImpl *>(this->_M_node)->_M_value;
     }
+
+#ifndef NDEBUG
+    _NodeImpl *_M_node_ptr() const noexcept {
+        return this->_M_off_by_one ? nullptr : static_cast<_NodeImpl *>(this->_M_node);
+    }
+#endif
 
     using value_type = std::remove_const_t<_Tp>;
     using reference = _Tp &;
@@ -684,6 +699,11 @@ public:
         _M_block->_M_root = nullptr;
     }
 
+    ~_RbTreeImpl() noexcept {
+        this->clear();
+        _RbTreeBase::_M_deallocate<_RbTreeRoot>(_M_alloc, _M_block);
+    }
+
     explicit _RbTreeImpl(_Compare __comp) noexcept
         : _RbTreeBase(_RbTreeBase::_M_allocate<_RbTreeRoot>(_M_alloc)),
           _M_comp(__comp) {
@@ -785,13 +805,14 @@ public:
     }
 
     iterator erase(const_iterator __it) noexcept {
-        const_iterator __tmp = __it;
+        assert(__it != this->end());
+        iterator __tmp(__it);
         ++__tmp;
         _RbTreeNode *__node = __it._M_node;
         _RbTreeImpl::_M_erase_node(__node);
         static_cast<_NodeImpl *>(__node)->_M_destruct();
         _RbTreeBase::_M_deallocate<_NodeImpl>(_M_alloc, __node);
-        return iterator(__tmp);
+        return __tmp;
     }
 
     using node_type = _RbTreeNodeHandle<_Tp, _Compare, _Alloc, _NodeImpl>;
@@ -974,42 +995,55 @@ public:
         return &_M_block->_M_root;
     }
 
-    // void _M_print(_RbTreeNode *__node) {
-    //     if (__node) {
-    //         _Tp &__value = static_cast<_NodeImpl *>(__node)->_M_value;
-    //         if constexpr (requires (_Tp t) { t.first; t.second; }) {
-    //             std::cout << __value.first << ':' << __value.second;
-    //         } else {
-    //             std::cout << __value;
-    //         }
-    //         std::cout << '(' << (__node->_M_color == _S_black ? 'B' : 'R') <<
-    //         ' '; if (__node->_M_left) {
-    //             if (__node->_M_left->_M_parent != __node ||
-    //             __node->_M_left->_M_pparent != &__node->_M_left) {
-    //                 std::cout << '*';
-    //             }
-    //         }
-    //         _M_print(__node->_M_left);
-    //         std::cout << ' ';
-    //         if (__node->_M_right) {
-    //             if (__node->_M_right->_M_parent != __node ||
-    //             __node->_M_right->_M_pparent != &__node->_M_right) {
-    //                 std::cout << '*';
-    //             }
-    //         }
-    //         _M_print(__node->_M_right);
-    //         std::cout << ')';
-    //     } else {
-    //         std::cout << '.';
-    //     }
-    // }
-    //
-    // void _M_print() {
-    //     _M_print(this->_M_block->_M_root);
-    //     std::cout << '\n';
-    // }
+#ifndef NDEBUG
+    template <class _Ostream>
+    void _M_print(_Ostream &__os, _RbTreeNode *__node) {
+        if (__node) {
+            _Tp &__value = static_cast<_NodeImpl *>(__node)->_M_value;
+            __os << '(';
+#if __cpp_concepts && __cpp_if_constexpr
+            if constexpr (requires (_Tp __t) { __t.first; __t.second; }) {
+                __os << __value.first << ':' << __value.second;
+            } else {
+                __os << __value;
+            }
+            __os << ' ';
+#endif
+            __os << (__node->_M_color == _S_black ? 'B' : 'R');
+            __os << ' ';
+            if (__node->_M_left) {
+                if (__node->_M_left->_M_parent != __node ||
+                __node->_M_left->_M_pparent != &__node->_M_left) {
+                    __os << '*';
+                }
+            }
+            _M_print(__os, __node->_M_left);
+            __os << ' ';
+            if (__node->_M_right) {
+                if (__node->_M_right->_M_parent != __node ||
+                __node->_M_right->_M_pparent != &__node->_M_right) {
+                    __os << '*';
+                }
+            }
+            _M_print(__os, __node->_M_right);
+            __os << ')';
+        } else {
+            __os << '.';
+        }
+    }
+    
+    template <class _Ostream>
+    void _M_print(_Ostream &__os) {
+        _M_print(__os, this->_M_block->_M_root);
+        __os << '\n';
+    }
+#endif
 
-    ~_RbTreeImpl() noexcept {
-        this->clear();
+    bool empty() const noexcept {
+        return this->_M_block->_M_root == nullptr;
+    }
+
+    size_t size() const noexcept {
+        return std::distance(this->begin(), this->end());
     }
 };

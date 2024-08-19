@@ -273,7 +273,7 @@ public:
         return this->_M_single_insert(__first, __last);
     }
 
-    using _RbTreeImpl<value_type, _Compare, _Alloc>::assign;
+    using _RbTreeImpl<value_type, _ValueComp, _Alloc>::assign;
 
     template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator,
                                                      _InputIt)>
@@ -459,7 +459,7 @@ public:
         return this->_M_single_insert(__first, __last);
     }
 
-    using _RbTreeImpl<value_type, _Compare, _Alloc>::assign;
+    using _RbTreeImpl<value_type, _ValueComp, _Alloc>::assign;
 
     template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator,
                                                      _InputIt)>
