@@ -8,14 +8,13 @@ int main() {
     table["delay"] = 12;
     if (!table.contains("delay"))
         table["delay"] = 32;
+    table["timeout"] = 42;
     
     for (auto it = table.begin(); it != table.end(); ++it)
         std::cout << it->first << "=" << it->second << '\n';
 
-    auto it = table.begin();
-    std::cout << "current it is " << it._M_node_ptr() << " " << (it != table.end() ? it->second : -1) << ", and tree is ";
-    table._M_print(std::cout);
-    it = table.erase(it);
-    std::cout << "current it is " << it._M_node_ptr() << " " << (it != table.end() ? it->second : -1) << ", and tree is ";
-    table._M_print(std::cout);
+    std::cout << "at(delay): " << table.at("delay") << '\n';
+    std::cout << "size: " << table.size() << '\n';
+
+    return 0;
 }
