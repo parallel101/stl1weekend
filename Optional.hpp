@@ -1,5 +1,6 @@
 #pragma once
 
+#include <version>
 #include <exception>
 #include <initializer_list>
 #include <type_traits>

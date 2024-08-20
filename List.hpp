@@ -4,21 +4,14 @@
 #include <iterator>
 #include <memory>
 #include <limits>
-#include <stdexcept>
 #include <utility>
-#include <compare>
 #include <initializer_list>
-
-#ifdef NDEBUG
-#define DEBUG_INIT_DEADBEAF(T)
-#else
-#define DEBUG_INIT_DEADBEAF(T) {(T *)0xdeadbeaf}
-#endif
+#include "_Common.hpp"
 
 template <class T>
 struct ListBaseNode {
-    ListBaseNode *m_next DEBUG_INIT_DEADBEAF(ListBaseNode);
-    ListBaseNode *m_prev DEBUG_INIT_DEADBEAF(ListBaseNode);
+    ListBaseNode *m_next;
+    ListBaseNode *m_prev;
 
     inline T &value();
     inline T const &value() const;
@@ -61,11 +54,13 @@ private:
     [[no_unique_address]] Alloc m_alloc;
 
     ListNode *newNode() {
-        return AllocNode{m_alloc}.allocate(1);
+        AllocNode allocNode{m_alloc};
+        return std::allocator_traits<AllocNode>::allocate(allocNode, 1);
     }
 
     void deleteNode(ListNode *node) noexcept {
-        AllocNode{m_alloc}.deallocate(static_cast<ListValueNode<T> *>(node), 1);
+        AllocNode allocNode{m_alloc};
+        std::allocator_traits<AllocNode>::deallocate(allocNode, static_cast<ListValueNode<T> *>(node));
     }
 
 public:
@@ -79,11 +74,11 @@ public:
         m_dummy.m_prev = m_dummy.m_next = &m_dummy;
     }
 
-    List(List &&that) : m_alloc(std::move(that.m_alloc)) {
+    List(List &&that) noexcept : m_alloc(std::move(that.m_alloc)) {
         _uninit_move_assign(std::move(that));
     }
 
-    List(List &&that, Alloc const &alloc) : m_alloc(alloc) {
+    List(List &&that, Alloc const &alloc) noexcept : m_alloc(alloc) {
         _uninit_move_assign(std::move(that));
     }
 
@@ -142,7 +137,7 @@ public:
         _uninit_assign(n);
     }
 
-    List(size_t n, T const &val, Alloc const &alloc = Alloc()) : m_alloc(alloc) {
+    explicit List(size_t n, T const &val, Alloc const &alloc = Alloc()) : m_alloc(alloc) {
         _uninit_assign(n, val);
     }
 
@@ -153,7 +148,7 @@ public:
     // random_access_iterator = *it *it=val it[n] it[n]=val it++ ++it it-- --it it+=n it-=n it+n it-n it!=it it==it
 
     template <std::input_iterator InputIt>
-    List(InputIt first, InputIt last, Alloc const &alloc = Alloc()) {
+    List(InputIt first, InputIt last, Alloc const &alloc = Alloc()) : m_alloc(alloc) {
         _uninit_assign(first, last);
     }
 
@@ -596,15 +591,9 @@ public:
         insert(pos, std::make_move_iterator(that.begin()), std::make_move_iterator(that.end()));
     }
 
-    Alloc get_allocator() const {
+    Alloc get_allocator() const noexcept {
         return m_alloc;
     }
 
-    bool operator==(List const &that) noexcept {
-        return std::equal(begin(), end(), that.begin(), that.end());
-    }
-
-    auto operator<=>(List const &that) noexcept {
-        return std::lexicographical_compare_three_way(begin(), end(), that.begin(), that.end());
-    }
+    _LIBPENGCXX_DEFINE_COMPARISON(List);
 };

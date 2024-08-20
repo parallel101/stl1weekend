@@ -4,6 +4,7 @@
 #include <utility>
 #include <stdexcept>
 #include "_RbTree.hpp"
+#include "_Common.hpp"
 
 template <class _Compare, class _Value, class = void>
 struct _RbTreeValueCompare {
@@ -135,13 +136,13 @@ public:
     }
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     iterator find(_Kv &&__key) noexcept {
         return this->_M_find(__key);
     }
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     const_iterator find(_Kv &&__key) const noexcept {
         return this->_M_find(__key);
     }
@@ -163,20 +164,20 @@ public:
     }
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     _Mapped const &at(_Kv const &__key) const {
         const_iterator __it = this->_M_find(__key);
-        if (__it == this->end()) {
+        if (__it == this->end()) [[unlikely]] {
             throw std::out_of_range("map::at");
         }
         return __it->second;
     }
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     _Mapped &at(_Kv const &__key) {
         iterator __it = this->_M_find(__key);
-        if (__it == this->end()) {
+        if (__it == this->end()) [[unlikely]] {
             throw std::out_of_range("map::at");
         }
         return __it->second;
@@ -184,7 +185,7 @@ public:
 
     _Mapped const &at(_Key const &__key) const {
         const_iterator __it = this->_M_find(__key);
-        if (__it == this->end()) {
+        if (__it == this->end()) [[unlikely]] {
             throw std::out_of_range("map::at");
         }
         return __it->second;
@@ -192,14 +193,14 @@ public:
 
     _Mapped &at(_Key const &__key) {
         iterator __it = this->_M_find(__key);
-        if (__it == this->end()) {
+        if (__it == this->end()) [[unlikely]] {
             throw std::out_of_range("map::at");
         }
         return __it->second;
     }
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     _Mapped &operator[](_Kv const &__key) {
         iterator __it = this->_M_find(__key);
         if (__it == this->end()) {
@@ -285,7 +286,7 @@ public:
     using _RbTreeImpl<value_type, _ValueComp, _Alloc>::erase;
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     size_t erase(_Kv &&__key) {
         return this->_M_single_erase(__key);
     }
@@ -295,7 +296,7 @@ public:
     }
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     size_t count(_Kv &&__value) const noexcept {
         return this->_M_contains(__value) ? 1 : 0;
     }
@@ -305,7 +306,7 @@ public:
     }
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     bool contains(_Kv &&__value) const noexcept {
         return this->_M_contains(__value);
     }
@@ -315,7 +316,7 @@ public:
     }
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     node_type extract(_Kv &&__key) {
         iterator __it = this->_M_find(__key);
         return __it != this->end() ? this->extract(__it) : node_type();
@@ -407,13 +408,13 @@ public:
     }
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     iterator find(_Kv &&__key) noexcept {
         return this->_M_find(__key);
     }
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     const_iterator find(_Kv &&__key) const noexcept {
         return this->_M_find(__key);
     }
@@ -471,7 +472,7 @@ public:
     using _RbTreeImpl<value_type, _ValueComp, _Alloc>::erase;
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     size_t erase(_Kv &&__key) {
         return this->_M_single_erase(__key);
     }
@@ -481,7 +482,7 @@ public:
     }
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     size_t count(_Kv &&__value) const noexcept {
         return this->_M_multi_count(__value);
     }
@@ -491,7 +492,7 @@ public:
     }
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     bool contains(_Kv &&__value) const noexcept {
         return this->_M_contains(__value);
     }
@@ -501,7 +502,7 @@ public:
     }
 
     template <class _Kv,
-              _LIBPENGCXX_REQUIRES_TRANSPARENT(_ValueComp, _Kv, value_type)>
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_ValueComp, _Kv, value_type)>
     node_type extract(_Kv &&__key) {
         iterator __it = this->_M_find(__key);
         return __it != this->end() ? this->extract(__it) : node_type();

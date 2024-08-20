@@ -11,9 +11,12 @@
 5. 从任一节点到其所有叶子节点的路径都包含相同数量的黑色节点。
 
 看起来好像很复杂，但实际上大多是废话，有用的只是 4 和 5 这两条。
-规则 4 翻译一下就是：不得出现相邻的红色节点（相邻指两个节点是父子关系）。这条规则还有一个隐含的信息：黑色节点可以相邻！
-规则 5 翻译一下就是：从根节点到所有底层叶子的距离（以黑色节点数量计），必须相等。
-因为规则 4 的存在，红色节点不可能相邻，也就是说最深的枝干只能是：红-黑-红-黑-红-黑-红-黑。
+规则 4
+翻译一下就是：不得出现相邻的红色节点（相邻指两个节点是父子关系）。这条规则还有一个隐含的信息：黑色节点可以相邻！
+规则 5
+翻译一下就是：从根节点到所有底层叶子的距离（以黑色节点数量计），必须相等。
+因为规则 4
+的存在，红色节点不可能相邻，也就是说最深的枝干只能是：红-黑-红-黑-红-黑-红-黑。
 结合规则 5 来看，也就是说每条枝干上的黑色节点数量必须相同，因为最深的枝干是 4
 个黑节点了，所以最浅的枝干至少也得有 4 个节点全是黑色的：黑-黑-黑-黑。
 可以看到，规则 4 和规则 5
@@ -25,24 +28,7 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
-
-#if __cpp_concepts && __cpp_lib_concepts
-# define _LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(__category, _Type) \
-     __category _Type
-#else
-# define _LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(__category, _Type) \
-     class _Type, std::enable_if_t<std::is_convertible_v< \
-                      typename std::iterator_traits<_Type>::iterator_category, \
-                      __category##_tag>>
-#endif
-#define _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp) \
-    class _Compare##Tp = _Compare, \
-          class = typename _Compare##Tp::is_transparent, \
-          class = \
-              decltype(std::declval<bool &>() = std::declval<_Compare##Tp>()( \
-                           std::declval<_Tv>(), std::declval<_Tp>()) = \
-                           std::declval<_Compare##Tp>()(std::declval<_Tp>(), \
-                                                        std::declval<_Tv>()))
+#include "_Common.hpp"
 
 enum _RbTreeColor {
     _S_black,
@@ -70,7 +56,8 @@ struct _RbTreeNodeImpl : _RbTreeNode {
 
     template <class... _Ts>
     void _M_construct(_Ts &&...__value) noexcept {
-        new (const_cast<std::remove_const_t<_Tp> *>(std::addressof(_M_value))) _Tp(std::forward<_Ts>(__value)...);
+        new (const_cast<std::remove_const_t<_Tp> *>(std::addressof(_M_value)))
+            _Tp(std::forward<_Ts>(__value)...);
     }
 
     void _M_destruct() noexcept {
@@ -210,20 +197,22 @@ public:
         std::is_const_v<T0>,
         _RbTreeIterator<_NodeImpl, std::remove_const_t<T0>, _Reverse>>()
         const noexcept {
-        if (!this->_M_off_by_one)
+        if (!this->_M_off_by_one) {
             return this->_M_node;
-        else
+        } else {
             return this->_M_proot;
+        }
     }
 
     template <class T0 = _Tp>
     operator std::enable_if_t<!std::is_const_v<T0>,
                               _RbTreeIterator<_NodeImpl, std::add_const_t<T0>,
                                               _Reverse>>() const noexcept {
-        if (!this->_M_off_by_one)
+        if (!this->_M_off_by_one) {
             return this->_M_node;
-        else
+        } else {
             return this->_M_proot;
+        }
     }
 
     _RbTreeIterator &operator++() noexcept { // ++__it
@@ -261,7 +250,8 @@ public:
 
 #ifndef NDEBUG
     _NodeImpl *_M_node_ptr() const noexcept {
-        return this->_M_off_by_one ? nullptr : static_cast<_NodeImpl *>(this->_M_node);
+        return this->_M_off_by_one ? nullptr
+                                   : static_cast<_NodeImpl *>(this->_M_node);
     }
 #endif
 
@@ -850,8 +840,8 @@ protected:
         }
     }
 
-    std::pair<iterator, size_t>
-    _M_erase_range(const_iterator __first, const_iterator __last) noexcept {
+    std::pair<iterator, size_t> _M_erase_range(const_iterator __first,
+                                               const_iterator __last) noexcept {
         size_t __num = 0;
         iterator __it(__first);
         while (__it != __last) {
@@ -868,37 +858,42 @@ protected:
     }
 
 public:
-    iterator erase(const_iterator __first,
-                          const_iterator __last) noexcept {
+    iterator erase(const_iterator __first, const_iterator __last) noexcept {
         return _RbTreeImpl::_M_erase_range(__first, __last).first;
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
+    template <class _Tv,
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     iterator lower_bound(_Tv &&__value) noexcept {
         return this->_M_lower_bound<_NodeImpl>(__value, _M_comp);
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
+    template <class _Tv,
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     const_iterator lower_bound(_Tv &&__value) const noexcept {
         return this->_M_lower_bound<_NodeImpl>(__value, _M_comp);
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
+    template <class _Tv,
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     iterator upper_bound(_Tv &&__value) noexcept {
         return this->_M_upper_bound<_NodeImpl>(__value, _M_comp);
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
+    template <class _Tv,
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     const_iterator upper_bound(_Tv &&__value) const noexcept {
         return this->_M_upper_bound<_NodeImpl>(__value, _M_comp);
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
+    template <class _Tv,
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     std::pair<iterator, iterator> equal_range(_Tv &&__value) noexcept {
         return {this->lower_bound(__value), this->upper_bound(__value)};
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
+    template <class _Tv,
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     std::pair<const_iterator, const_iterator>
     equal_range(_Tv &&__value) const noexcept {
         return {this->lower_bound(__value), this->upper_bound(__value)};
@@ -1001,19 +996,22 @@ public:
         if (__node) {
             _Tp &__value = static_cast<_NodeImpl *>(__node)->_M_value;
             __os << '(';
-#if __cpp_concepts && __cpp_if_constexpr
-            if constexpr (requires (_Tp __t) { __t.first; __t.second; }) {
+# if __cpp_concepts && __cpp_if_constexpr
+            if constexpr (requires(_Tp __t) {
+                              __t.first;
+                              __t.second;
+                          }) {
                 __os << __value.first << ':' << __value.second;
             } else {
                 __os << __value;
             }
             __os << ' ';
-#endif
+# endif
             __os << (__node->_M_color == _S_black ? 'B' : 'R');
             __os << ' ';
             if (__node->_M_left) {
                 if (__node->_M_left->_M_parent != __node ||
-                __node->_M_left->_M_pparent != &__node->_M_left) {
+                    __node->_M_left->_M_pparent != &__node->_M_left) {
                     __os << '*';
                 }
             }
@@ -1021,7 +1019,7 @@ public:
             __os << ' ';
             if (__node->_M_right) {
                 if (__node->_M_right->_M_parent != __node ||
-                __node->_M_right->_M_pparent != &__node->_M_right) {
+                    __node->_M_right->_M_pparent != &__node->_M_right) {
                     __os << '*';
                 }
             }
@@ -1031,7 +1029,7 @@ public:
             __os << '.';
         }
     }
-    
+
     template <class _Ostream>
     void _M_print(_Ostream &__os) {
         _M_print(__os, this->_M_block->_M_root);
