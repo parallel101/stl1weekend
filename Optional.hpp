@@ -393,7 +393,7 @@ public:
 };
 
 #if __cpp_deduction_guides
-template <class T> // CTAD
+template <class T> // C++17 才有 CTAD
 Optional(T) -> Optional<T>;
 #endif
 
