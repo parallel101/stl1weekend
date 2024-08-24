@@ -1,12 +1,12 @@
 #pragma once
 
 #include "UniquePtr.hpp"
+#include <algorithm>
+#include <atomic>
 #include <memory>
 #include <new>
 #include <type_traits>
 #include <utility>
-#include <atomic>
-#include <algorithm>
 
 struct _SpCounter {
     std::atomic<long> _M_refcnt;
@@ -39,7 +39,9 @@ struct _SpCounterImpl final : _SpCounter {
 
     explicit _SpCounterImpl(_Tp *__ptr) noexcept : _M_ptr(__ptr) {}
 
-    explicit _SpCounterImpl(_Tp *__ptr, _Deleter __deleter) noexcept : _M_ptr(__ptr), _M_deleter(std::move(__deleter)) {}
+    explicit _SpCounterImpl(_Tp *__ptr, _Deleter __deleter) noexcept
+        : _M_ptr(__ptr),
+          _M_deleter(std::move(__deleter)) {}
 
     ~_SpCounterImpl() noexcept override {
         _M_deleter(_M_ptr);
@@ -52,13 +54,18 @@ struct _SpCounterImplFused final : _SpCounter {
     void *_M_mem;
     [[no_unique_address]] _Deleter _M_deleter;
 
-    explicit _SpCounterImplFused(_Tp *__ptr, void *__mem, _Deleter __deleter) noexcept
-    : _M_ptr(__ptr), _M_mem(__mem), _M_deleter(std::move(__deleter)) {}
+    explicit _SpCounterImplFused(_Tp *__ptr, void *__mem,
+                                 _Deleter __deleter) noexcept
+        : _M_ptr(__ptr),
+          _M_mem(__mem),
+          _M_deleter(std::move(__deleter)) {}
 
     ~_SpCounterImplFused() noexcept override {
         _M_deleter(_M_ptr);
 #if __cpp_aligned_new
-        ::operator delete(_M_mem, std::align_val_t(std::max(alignof(_Tp), alignof(_SpCounterImplFused))));
+        ::operator delete(
+            _M_mem, std::align_val_t(
+                        std::max(alignof(_Tp), alignof(_SpCounterImplFused))));
 #else
         ::operator delete(_M_mem);
 #endif
@@ -75,8 +82,10 @@ private:
 
     template <class>
     friend struct SharedPtr;
-    
-    explicit SharedPtr(_Tp *__ptr, _SpCounter *__owner) noexcept : _M_ptr(__ptr), _M_owner(__owner) {}
+
+    explicit SharedPtr(_Tp *__ptr, _SpCounter *__owner) noexcept
+        : _M_ptr(__ptr),
+          _M_owner(__owner) {}
 
 public:
     using element_type = _Tp;
@@ -84,70 +93,100 @@ public:
 
     SharedPtr(std::nullptr_t = nullptr) noexcept : _M_owner(nullptr) {}
 
-    template <class _Yp, std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
+    template <class _Yp,
+              std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
     explicit SharedPtr(_Yp *__ptr)
-    : _M_ptr(__ptr), _M_owner(new _SpCounterImpl<_Yp, DefaultDeleter<_Yp>>(__ptr)) {}
+        : _M_ptr(__ptr),
+          _M_owner(new _SpCounterImpl<_Yp, DefaultDeleter<_Yp>>(__ptr)) {}
 
-    template <class _Yp, class _Deleter, std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
+    template <class _Yp, class _Deleter,
+              std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
     explicit SharedPtr(_Yp *__ptr, _Deleter __deleter)
-    : _M_owner(new _SpCounterImpl<_Yp, _Deleter>(__ptr, std::move(__deleter))) {}
+        : _M_owner(
+              new _SpCounterImpl<_Yp, _Deleter>(__ptr, std::move(__deleter))) {}
 
-    template <class _Yp, class _Deleter, std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
+    template <class _Yp, class _Deleter,
+              std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
     explicit SharedPtr(UniquePtr<_Yp, _Deleter> &&__ptr)
-    : SharedPtr(__ptr.get(), __ptr.get_deleter()) {}
+        : SharedPtr(__ptr.get(), __ptr.get_deleter()) {}
 
     template <class _Yp>
-    friend inline SharedPtr<_Yp> _S_makeSharedFused(_Yp *__ptr, _SpCounter *__owner) noexcept;
+    inline friend SharedPtr<_Yp>
+    _S_makeSharedFused(_Yp *__ptr, _SpCounter *__owner) noexcept;
 
-    SharedPtr(SharedPtr const &__that) noexcept : _M_ptr(__that._M_ptr), _M_owner(__that._M_owner) {
-        if (_M_owner)
+    SharedPtr(SharedPtr const &__that) noexcept
+        : _M_ptr(__that._M_ptr),
+          _M_owner(__that._M_owner) {
+        if (_M_owner) {
             _M_owner->_M_incref();
+        }
     }
 
-    template <class _Yp, std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
-    SharedPtr(SharedPtr<_Yp> const &__that) noexcept : _M_ptr(__that._M_ptr), _M_owner(__that._M_owner) {
-        if (_M_owner)
+    template <class _Yp,
+              std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
+    SharedPtr(SharedPtr<_Yp> const &__that) noexcept
+        : _M_ptr(__that._M_ptr),
+          _M_owner(__that._M_owner) {
+        if (_M_owner) {
             _M_owner->_M_incref();
+        }
     }
 
-    SharedPtr(SharedPtr &&__that) noexcept : _M_ptr(__that._M_ptr), _M_owner(__that._M_owner) {
+    SharedPtr(SharedPtr &&__that) noexcept
+        : _M_ptr(__that._M_ptr),
+          _M_owner(__that._M_owner) {
         __that._M_ptr = nullptr;
         __that._M_owner = nullptr;
     }
 
-    template <class _Yp, std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
-    SharedPtr(SharedPtr<_Yp> &&__that) noexcept : _M_ptr(__that._M_ptr), _M_owner(__that._M_owner) {
+    template <class _Yp,
+              std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
+    SharedPtr(SharedPtr<_Yp> &&__that) noexcept
+        : _M_ptr(__that._M_ptr),
+          _M_owner(__that._M_owner) {
         __that._M_ptr = nullptr;
         __that._M_owner = nullptr;
     }
 
     template <class _Yp>
-    SharedPtr(SharedPtr<_Yp> const &__that, _Tp *__ptr) noexcept : _M_ptr(__ptr), _M_owner(__that._M_owner) {
-        if (_M_owner)
+    SharedPtr(SharedPtr<_Yp> const &__that, _Tp *__ptr) noexcept
+        : _M_ptr(__ptr),
+          _M_owner(__that._M_owner) {
+        if (_M_owner) {
             _M_owner->_M_incref();
+        }
     }
 
     template <class _Yp>
-    SharedPtr(SharedPtr<_Yp> &&__that, _Tp *__ptr) noexcept : _M_ptr(__ptr), _M_owner(__that._M_owner) {
+    SharedPtr(SharedPtr<_Yp> &&__that, _Tp *__ptr) noexcept
+        : _M_ptr(__ptr),
+          _M_owner(__that._M_owner) {
         __that._M_ptr = nullptr;
         __that._M_owner = nullptr;
     }
 
     SharedPtr &operator=(SharedPtr const &__that) noexcept {
-        if (this == &__that) return *this;
-        if (_M_owner)
+        if (this == &__that) {
+            return *this;
+        }
+        if (_M_owner) {
             _M_owner->_M_decref();
+        }
         _M_ptr = __that._M_ptr;
         _M_owner = __that._M_owner;
-        if (_M_owner)
+        if (_M_owner) {
             _M_owner->_M_incref();
+        }
         return *this;
     }
 
     SharedPtr &operator=(SharedPtr &&__that) noexcept {
-        if (this == &__that) return *this;
-        if (_M_owner)
+        if (this == &__that) {
+            return *this;
+        }
+        if (_M_owner) {
             _M_owner->_M_decref();
+        }
         _M_ptr = __that._M_ptr;
         _M_owner = __that._M_owner;
         __that._M_ptr = nullptr;
@@ -155,23 +194,32 @@ public:
         return *this;
     }
 
-    template <class _Yp, std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
+    template <class _Yp,
+              std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
     SharedPtr &operator=(SharedPtr<_Yp> const &__that) noexcept {
-        if (this == &__that) return *this;
-        if (_M_owner)
+        if (this == &__that) {
+            return *this;
+        }
+        if (_M_owner) {
             _M_owner->_M_decref();
+        }
         _M_ptr = __that._M_ptr;
         _M_owner = __that._M_owner;
-        if (_M_owner)
+        if (_M_owner) {
             _M_owner->_M_incref();
+        }
         return *this;
     }
 
-    template <class _Yp, std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
+    template <class _Yp,
+              std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
     SharedPtr &operator=(SharedPtr<_Yp> &&__that) noexcept {
-        if (this == &__that) return *this;
-        if (_M_owner)
+        if (this == &__that) {
+            return *this;
+        }
+        if (_M_owner) {
             _M_owner->_M_decref();
+        }
         _M_ptr = __that._M_ptr;
         _M_owner = __that._M_owner;
         __that._M_ptr = nullptr;
@@ -180,16 +228,18 @@ public:
     }
 
     void reset() noexcept {
-        if (_M_owner)
+        if (_M_owner) {
             _M_owner->_M_decref();
+        }
         _M_owner = nullptr;
         _M_ptr = nullptr;
     }
 
     template <class _Yp>
     void reset(_Yp *__ptr) {
-        if (_M_owner)
+        if (_M_owner) {
             _M_owner->_M_decref();
+        }
         _M_ptr = nullptr;
         _M_owner = nullptr;
         _M_ptr = __ptr;
@@ -198,17 +248,20 @@ public:
 
     template <class _Yp, class _Deleter>
     void reset(_Yp *__ptr, _Deleter __deleter) {
-        if (_M_owner)
+        if (_M_owner) {
             _M_owner->_M_decref();
+        }
         _M_ptr = nullptr;
         _M_owner = nullptr;
         _M_ptr = __ptr;
-        _M_owner = new _SpCounterImpl<_Yp, _Deleter>(__ptr, std::move(__deleter));
+        _M_owner =
+            new _SpCounterImpl<_Yp, _Deleter>(__ptr, std::move(__deleter));
     }
 
     ~SharedPtr() noexcept {
-        if (_M_owner)
+        if (_M_owner) {
             _M_owner->_M_decref();
+        }
     }
 
     long use_count() noexcept {
@@ -282,7 +335,8 @@ public:
 };
 
 template <class _Tp>
-inline SharedPtr<_Tp> _S_makeSharedFused(_Tp *__ptr, _SpCounter *__owner) noexcept {
+inline SharedPtr<_Tp> _S_makeSharedFused(_Tp *__ptr,
+                                         _SpCounter *__owner) noexcept {
     return SharedPtr<_Tp>(__ptr, __owner);
 }
 
@@ -304,39 +358,53 @@ protected:
     EnableSharedFromThis() noexcept : _M_owner(nullptr) {}
 
     SharedPtr<_Tp> shared_from_this() {
-        static_assert(std::is_base_of_v<EnableSharedFromThis, _Tp>, "must be derived class");
-        if (!_M_owner) throw std::bad_weak_ptr();
+        static_assert(std::is_base_of_v<EnableSharedFromThis, _Tp>,
+                      "must be derived class");
+        if (!_M_owner) {
+            throw std::bad_weak_ptr();
+        }
         _M_owner->_M_incref();
         return _S_makeSharedFused(static_cast<_Tp *>(this), _M_owner);
     }
 
     SharedPtr<_Tp const> shared_from_this() const {
-        static_assert(std::is_base_of_v<EnableSharedFromThis, _Tp>, "must be derived class");
-        if (!_M_owner) throw std::bad_weak_ptr();
+        static_assert(std::is_base_of_v<EnableSharedFromThis, _Tp>,
+                      "must be derived class");
+        if (!_M_owner) {
+            throw std::bad_weak_ptr();
+        }
         _M_owner->_M_incref();
         return _S_makeSharedFused(static_cast<_Tp const *>(this), _M_owner);
     }
 
     template <class _Up>
-    friend inline void _S_setEnableSharedFromThisOwner(EnableSharedFromThis<_Up> *, _SpCounter *);
+    inline friend void
+    _S_setEnableSharedFromThisOwner(EnableSharedFromThis<_Up> *, _SpCounter *);
 };
 
 template <class _Up>
-inline void _S_setEnableSharedFromThisOwner(EnableSharedFromThis<_Up> *__ptr, _SpCounter *__owner) {
+inline void _S_setEnableSharedFromThisOwner(EnableSharedFromThis<_Up> *__ptr,
+                                            _SpCounter *__owner) {
     __ptr->_M_owner = __owner;
 }
 
-template <class _Tp, std::enable_if_t<std::is_base_of_v<EnableSharedFromThis<_Tp>, _Tp>, int> = 0>
+template <class _Tp,
+          std::enable_if_t<std::is_base_of_v<EnableSharedFromThis<_Tp>, _Tp>,
+                           int> = 0>
 void _S_setupEnableSharedFromThis(_Tp *__ptr, _SpCounter *__owner) {
-    _S_setEnableSharedFromThisOwner(static_cast<EnableSharedFromThis<_Tp> *>(__ptr), __owner);
+    _S_setEnableSharedFromThisOwner(
+        static_cast<EnableSharedFromThis<_Tp> *>(__ptr), __owner);
 }
 
-template <class _Tp, std::enable_if_t<!std::is_base_of_v<EnableSharedFromThis<_Tp>, _Tp>, int> = 0>
+template <class _Tp,
+          std::enable_if_t<!std::is_base_of_v<EnableSharedFromThis<_Tp>, _Tp>,
+                           int> = 0>
 void _S_setupEnableSharedFromThis(_Tp *, _SpCounter *) {}
 
-template <class _Tp, class ..._Args, std::enable_if_t<!std::is_unbounded_array_v<_Tp>, int> = 0>
+template <class _Tp, class... _Args,
+          std::enable_if_t<!std::is_unbounded_array_v<_Tp>, int> = 0>
 SharedPtr<_Tp> makeShared(_Args &&...__args) {
-    const auto __deleter = [] (_Tp *__ptr) noexcept {
+    auto const __deleter = [](_Tp *__ptr) noexcept {
         __ptr->~_Tp();
     };
     using _Counter = _SpCounterImplFused<_Tp, decltype(__deleter)>;
@@ -348,9 +416,11 @@ SharedPtr<_Tp> makeShared(_Args &&...__args) {
     _Counter *__counter = reinterpret_cast<_Counter *>(__mem);
 #else
     void *__mem = ::operator new(__size + __align);
-    _Counter *__counter = reinterpret_cast<_SpC *>(reinterpret_cast<std::size_t>(__mem) & __align);
+    _Counter *__counter = reinterpret_cast<_SpC *>(
+        reinterpret_cast<std::size_t>(__mem) & __align);
 #endif
-    _Tp *__object = reinterpret_cast<_Tp *>(reinterpret_cast<char *>(__counter) + __offset);
+    _Tp *__object =
+        reinterpret_cast<_Tp *>(reinterpret_cast<char *>(__counter) + __offset);
     try {
         new (__object) _Tp(std::forward<_Args>(__args)...);
     } catch (...) {
@@ -368,7 +438,7 @@ SharedPtr<_Tp> makeShared(_Args &&...__args) {
 
 template <class _Tp, std::enable_if_t<!std::is_unbounded_array_v<_Tp>, int> = 0>
 SharedPtr<_Tp> makeSharedForOverwrite() {
-    const auto __deleter = [] (_Tp *__ptr) noexcept {
+    auto const __deleter = [](_Tp *__ptr) noexcept {
         __ptr->~_Tp();
     };
     using _Counter = _SpCounterImplFused<_Tp, decltype(__deleter)>;
@@ -380,9 +450,11 @@ SharedPtr<_Tp> makeSharedForOverwrite() {
     _Counter *__counter = reinterpret_cast<_Counter *>(__mem);
 #else
     void *__mem = ::operator new(__size + __align);
-    _SpC *__counter = reinterpret_cast<_SpC *>(reinterpret_cast<std::size_t>(__mem) & __align);
+    _SpC *__counter = reinterpret_cast<_SpC *>(
+        reinterpret_cast<std::size_t>(__mem) & __align);
 #endif
-    _Tp *__object = reinterpret_cast<_Tp *>(reinterpret_cast<char *>(__counter) + __offset);
+    _Tp *__object =
+        reinterpret_cast<_Tp *>(reinterpret_cast<char *>(__counter) + __offset);
     try {
         new (__object) _Tp;
     } catch (...) {
@@ -398,7 +470,8 @@ SharedPtr<_Tp> makeSharedForOverwrite() {
     return _S_makeSharedFused(__object, __counter);
 }
 
-template <class _Tp, class ..._Args, std::enable_if_t<std::is_unbounded_array_v<_Tp>, int> = 0>
+template <class _Tp, class... _Args,
+          std::enable_if_t<std::is_unbounded_array_v<_Tp>, int> = 0>
 SharedPtr<_Tp> makeShared(std::size_t __len) {
     std::remove_extent_t<_Tp> *__p = new std::remove_extent_t<_Tp>[__len];
     try {
@@ -438,8 +511,9 @@ SharedPtr<_Tp> reinterpretPointerCast(SharedPtr<_Up> const &__ptr) {
 template <class _Tp, class _Up>
 SharedPtr<_Tp> dynamicPointerCast(SharedPtr<_Up> const &__ptr) {
     _Tp *__p = dynamic_cast<_Tp *>(__ptr.get());
-    if (__p != nullptr)
+    if (__p != nullptr) {
         return SharedPtr<_Tp>(__ptr, __p);
-    else
+    } else {
         return nullptr;
+    }
 }
