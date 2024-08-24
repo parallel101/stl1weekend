@@ -2,8 +2,8 @@
 
 #include <cstddef> // size_t
 #include <stdexcept> // std::out_of_range
-#include <string> // std::to_string
 #include <iterator> // std::reverse_iterator
+#include <algorithm> // std::equal
 #include "_Common.hpp"
 
 // C++ 标准规定：单下划线+大写字母（_Identifier）或 双下划线+小写字母（__identifier）的标识符是保留字。理论上用户不得使用，只允许标准库和编译器使用。此处小彭老师打算只在最简单的 array 容器中严格服从一下这个规则作为演示，正经标准库里的代码都是这样的（为避免和用户定义的符号产生冲突），此后其他容器的课程都会用日常的写法，不给同学平添阅读难度
@@ -11,6 +11,8 @@
 template <class _Tp, size_t _N>
 struct Array {
     using value_type = _Tp;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
     using pointer = _Tp *;
     using const_pointer = _Tp const *;
     using reference = _Tp &;

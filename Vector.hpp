@@ -5,6 +5,7 @@
 #include <memory>
 #include <limits>
 #include <stdexcept>
+#include <algorithm>
 #include <utility>
 #include <initializer_list>
 #include "_Common.hpp"
@@ -14,8 +15,8 @@ struct Vector {
 public:
     using value_type = _Tp;
     using allocator_type = _Alloc;
-    using size_type = size_t;
-    using difference_type = ptrdiff_t;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
     using pointer = _Tp *;
     using const_pointer = _Tp const *;
     using reference = _Tp &;
@@ -27,8 +28,8 @@ public:
 
 private:
     _Tp *_M_data;
-    size_t _M_size;
-    size_t _M_cap;
+    std::size_t _M_size;
+    std::size_t _M_cap;
     [[no_unique_address]] _Alloc _M_alloc;
 
 public:
@@ -41,64 +42,64 @@ public:
     Vector(std::initializer_list<_Tp> __ilist, _Alloc const &alloc = _Alloc())
     : Vector(__ilist.begin(), __ilist.end(), alloc) {}
 
-    explicit Vector(size_t __n, _Alloc const &alloc = _Alloc()) : _M_alloc(alloc) {
+    explicit Vector(std::size_t __n, _Alloc const &alloc = _Alloc()) : _M_alloc(alloc) {
         _M_data = _M_alloc.allocate(__n);
         _M_cap = _M_size = __n;
-        for (size_t __i = 0; __i != __n; __i++) {
+        for (std::size_t __i = 0; __i != __n; __i++) {
             std::construct_at(&_M_data[__i]); // _M_data[__i] = 0
         }
     }
 
-    Vector(size_t __n, _Tp const &val, _Alloc const &alloc = _Alloc()) : _M_alloc(alloc) {
+    Vector(std::size_t __n, _Tp const &val, _Alloc const &alloc = _Alloc()) : _M_alloc(alloc) {
         _M_data = _M_alloc.allocate(__n);
         _M_cap = _M_size = __n;
-        for (size_t __i = 0; __i != __n; __i++) {
+        for (std::size_t __i = 0; __i != __n; __i++) {
             std::construct_at(&_M_data[__i], val); // _M_data[__i] = val
         }
     }
 
     template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::random_access_iterator, _InputIt)>
     Vector(_InputIt __first, _InputIt __last, _Alloc const &alloc = _Alloc()) : _M_alloc(alloc) {
-        size_t __n = __last - __first;
+        std::size_t __n = __last - __first;
         _M_data = _M_alloc.allocate(__n);
         _M_cap = _M_size = __n;
-        for (size_t __i = 0; __i != __n; __i++) {
+        for (std::size_t __i = 0; __i != __n; __i++) {
             std::construct_at(&_M_data[__i], *__first);
             ++__first;
         }
     }
 
     void clear() noexcept {
-        for (size_t __i = 0; __i != _M_size; __i++) {
+        for (std::size_t __i = 0; __i != _M_size; __i++) {
             std::destroy_at(&_M_data[__i]);
         }
         _M_size = 0;
     }
 
-    void resize(size_t __n) {
+    void resize(std::size_t __n) {
         if (__n < _M_size) {
-            for (size_t __i = __n; __i != _M_size; __i++) {
+            for (std::size_t __i = __n; __i != _M_size; __i++) {
                 std::destroy_at(&_M_data[__i]);
             }
             _M_size = __n;
         } else if (__n > _M_size) {
             reserve(__n);
-            for (size_t __i = _M_size; __i != __n; __i++) {
+            for (std::size_t __i = _M_size; __i != __n; __i++) {
                 std::construct_at(&_M_data[__i]); // _M_data[__i] = 0
             }
         }
         _M_size = __n;
     }
 
-    void resize(size_t __n, _Tp const &val) {
+    void resize(std::size_t __n, _Tp const &val) {
         if (__n < _M_size) {
-            for (size_t __i = __n; __i != _M_size; __i++) {
+            for (std::size_t __i = __n; __i != _M_size; __i++) {
                 std::destroy_at(&_M_data[__i]);
             }
             _M_size = __n;
         } else if (__n > _M_size) {
             reserve(__n);
-            for (size_t __i = _M_size; __i != __n; __i++) {
+            for (std::size_t __i = _M_size; __i != __n; __i++) {
                 std::construct_at(&_M_data[__i], val); // _M_data[__i] = val
             }
         }
@@ -115,7 +116,7 @@ public:
             _M_data = _M_alloc.allocate(_M_size);
         }
         if (__old_cap != 0) [[likely]] {
-            for (size_t __i = 0; __i != _M_size; __i++) {
+            for (std::size_t __i = 0; __i != _M_size; __i++) {
                 std::construct_at(&_M_data[__i], std::move_if_noexcept(__old_data[__i])); // _M_data[__i] = std::move(__old_data[__i])
                 std::destroy_at(&__old_data[__i]);
             }
@@ -123,7 +124,7 @@ public:
         }
     }
 
-    void reserve(size_t __n) {
+    void reserve(std::size_t __n) {
         if (__n <= _M_cap) return;
         __n = std::max(__n, _M_cap * 2);
         /* printf("grow from %zd to %zd\__n", _M_cap, __n); */
@@ -137,21 +138,21 @@ public:
             _M_cap = __n;
         }
         if (__old_cap != 0) {
-            for (size_t __i = 0; __i != _M_size; __i++) {
+            for (std::size_t __i = 0; __i != _M_size; __i++) {
                 std::construct_at(&_M_data[__i], std::move_if_noexcept(__old_data[__i]));
             }
-            for (size_t __i = 0; __i != _M_size; __i++) {
+            for (std::size_t __i = 0; __i != _M_size; __i++) {
                 std::destroy_at(&__old_data[__i]);
             }
             _M_alloc.deallocate(__old_data, __old_cap);
         }
     }
 
-    size_t capacity() const noexcept {
+    std::size_t capacity() const noexcept {
         return _M_cap;
     }
 
-    size_t size() const noexcept {
+    std::size_t size() const noexcept {
         return _M_size;
     }
 
@@ -159,24 +160,24 @@ public:
         return _M_size == 0;
     }
 
-    static constexpr size_t max_size() noexcept {
-        return std::numeric_limits<size_t>::max() / sizeof(_Tp);
+    static constexpr std::size_t max_size() noexcept {
+        return std::numeric_limits<std::size_t>::max() / sizeof(_Tp);
     }
 
-    _Tp const &operator[](size_t __i) const noexcept {
+    _Tp const &operator[](std::size_t __i) const noexcept {
         return _M_data[__i];
     }
 
-    _Tp &operator[](size_t __i) noexcept {
+    _Tp &operator[](std::size_t __i) noexcept {
         return _M_data[__i];
     }
 
-    _Tp const &at(size_t __i) const {
+    _Tp const &at(std::size_t __i) const {
         if (__i >= _M_size) [[unlikely]] throw std::out_of_range("vector::at");
         return _M_data[__i];
     }
 
-    _Tp &at(size_t __i) {
+    _Tp &at(std::size_t __i) {
         if (__i >= _M_size) [[unlikely]] throw std::out_of_range("vector::at");
         return _M_data[__i];
     }
@@ -201,7 +202,7 @@ public:
 
     Vector &operator=(Vector &&__that) noexcept {
         if (&__that == this) [[unlikely]] return *this;
-        for (size_t __i = 0; __i != _M_size; __i++) {
+        for (std::size_t __i = 0; __i != _M_size; __i++) {
             std::destroy_at(&_M_data[__i]);
         }
         if (_M_cap != 0) {
@@ -227,7 +228,7 @@ public:
         _M_cap = _M_size = __that._M_size;
         if (_M_size != 0) {
             _M_data = _M_alloc.allocate(_M_size);
-            for (size_t __i = 0; __i != _M_size; __i++) {
+            for (std::size_t __i = 0; __i != _M_size; __i++) {
                 std::construct_at(&_M_data[__i], std::as_const(__that._M_data[__i]));
             }
         } else {
@@ -239,7 +240,7 @@ public:
         _M_cap = _M_size = __that._M_size;
         if (_M_size != 0) {
             _M_data = _M_alloc.allocate(_M_size);
-            for (size_t __i = 0; __i != _M_size; __i++) {
+            for (std::size_t __i = 0; __i != _M_size; __i++) {
                 std::construct_at(&_M_data[__i], std::as_const(__that._M_data[__i]));
             }
         } else {
@@ -251,7 +252,7 @@ public:
         if (&__that == this) [[unlikely]] return *this;
         reserve(__that._M_size);
         _M_size = __that._M_size;
-        for (size_t __i = 0; __i != _M_size; __i++) {
+        for (std::size_t __i = 0; __i != _M_size; __i++) {
             std::construct_at(&_M_data[__i], std::as_const(__that._M_data[__i]));
         }
         return *this;
@@ -360,8 +361,8 @@ public:
     }
 
     _Tp *erase(_Tp const *__it) noexcept(std::is_nothrow_move_assignable_v<_Tp>) {
-        size_t __i = __it - _M_data;
-        for (size_t __j = __i + 1; __j != _M_size; __j++) {
+        std::size_t __i = __it - _M_data;
+        for (std::size_t __j = __i + 1; __j != _M_size; __j++) {
             _M_data[__j - 1] = std::move(_M_data[__j]);
         }
         _M_size -= 1;
@@ -370,22 +371,22 @@ public:
     }
 
     _Tp *erase(_Tp const *__first, _Tp const *__last) noexcept(std::is_nothrow_move_assignable_v<_Tp>) {
-        size_t diff = __last - __first;
-        for (size_t __j = __last - _M_data; __j != _M_size; __j++) {
+        std::size_t diff = __last - __first;
+        for (std::size_t __j = __last - _M_data; __j != _M_size; __j++) {
             _M_data[__j - diff] = std::move(_M_data[__j]);
         }
         _M_size -= diff;
-        for (size_t __j = _M_size; __j != _M_size + diff; __j++) {
+        for (std::size_t __j = _M_size; __j != _M_size + diff; __j++) {
             std::destroy_at(&_M_data[__j]);
         }
         return const_cast<_Tp *>(__first);
     }
 
-    void assign(size_t __n, _Tp const &val) {
+    void assign(std::size_t __n, _Tp const &val) {
         clear();
         reserve(__n);
         _M_size = __n;
-        for (size_t __i = 0; __i != __n; __i++) {
+        for (std::size_t __i = 0; __i != __n; __i++) {
             std::construct_at(&_M_data[__i], val);
         }
     }
@@ -393,10 +394,10 @@ public:
     template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::random_access_iterator, _InputIt)>
     void assign(_InputIt __first, _InputIt __last) {
         clear();
-        size_t __n = __last - __first;
+        std::size_t __n = __last - __first;
         reserve(__n);
         _M_size = __n;
-        for (size_t __i = 0; __i != __n; __i++) {
+        for (std::size_t __i = 0; __i != __n; __i++) {
             std::construct_at(_M_data[__i], *__first);
             ++__first;
         }
@@ -412,10 +413,10 @@ public:
 
     template <class ...Args>
     _Tp *emplace(_Tp const *__it, Args &&...__args) {
-        size_t __j = __it - _M_data;
+        std::size_t __j = __it - _M_data;
         reserve(_M_size + 1);
         // __j ~ _M_size => __j + 1 ~ _M_size + 1
-        for (size_t __i = _M_size; __i != __j; __i--) {
+        for (std::size_t __i = _M_size; __i != __j; __i--) {
             std::construct_at(&_M_data[__i], std::move(_M_data[__i - 1]));
             std::destroy_at(&_M_data[__i - 1]);
         }
@@ -425,10 +426,10 @@ public:
     }
 
     _Tp *insert(_Tp const *__it, _Tp &&val) {
-        size_t __j = __it - _M_data;
+        std::size_t __j = __it - _M_data;
         reserve(_M_size + 1);
         // __j ~ _M_size => __j + 1 ~ _M_size + 1
-        for (size_t __i = _M_size; __i != __j; __i--) {
+        for (std::size_t __i = _M_size; __i != __j; __i--) {
             std::construct_at(&_M_data[__i], std::move(_M_data[__i - 1]));
             std::destroy_at(&_M_data[__i - 1]);
         }
@@ -438,10 +439,10 @@ public:
     }
 
     _Tp *insert(_Tp const *__it, _Tp const &val) {
-        size_t __j = __it - _M_data;
+        std::size_t __j = __it - _M_data;
         reserve(_M_size + 1);
         // __j ~ _M_size => __j + 1 ~ _M_size + 1
-        for (size_t __i = _M_size; __i != __j; __i--) {
+        for (std::size_t __i = _M_size; __i != __j; __i--) {
             std::construct_at(&_M_data[__i], std::move(_M_data[__i - 1]));
             std::destroy_at(&_M_data[__i - 1]);
         }
@@ -450,17 +451,17 @@ public:
         return _M_data + __j;
     }
 
-    _Tp *insert(_Tp const *__it, size_t __n, _Tp const &val) {
-        size_t __j = __it - _M_data;
+    _Tp *insert(_Tp const *__it, std::size_t __n, _Tp const &val) {
+        std::size_t __j = __it - _M_data;
         if (__n == 0) [[unlikely]] return const_cast<_Tp *>(__it);
         reserve(_M_size + __n);
         // __j ~ _M_size => __j + __n ~ _M_size + __n
-        for (size_t __i = _M_size; __i != __j; __i--) {
+        for (std::size_t __i = _M_size; __i != __j; __i--) {
             std::construct_at(&_M_data[__i + __n - 1], std::move(_M_data[__i - 1]));
             std::destroy_at(&_M_data[__i - 1]);
         }
         _M_size += __n;
-        for (size_t __i = __j; __i != __j + __n; __i++) {
+        for (std::size_t __i = __j; __i != __j + __n; __i++) {
             std::construct_at(&_M_data[__i], val);
         }
         return _M_data + __j;
@@ -468,17 +469,17 @@ public:
 
     template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::random_access_iterator, _InputIt)>
     _Tp *insert(_Tp const *__it, _InputIt __first, _InputIt __last) {
-        size_t __j = __it - _M_data;
-        size_t __n = __last - __first;
+        std::size_t __j = __it - _M_data;
+        std::size_t __n = __last - __first;
         if (__n == 0) [[unlikely]] return const_cast<_Tp *>(__it);
         reserve(_M_size + __n);
         // __j ~ _M_size => __j + __n ~ _M_size + __n
-        for (size_t __i = _M_size; __i != __j; __i--) {
+        for (std::size_t __i = _M_size; __i != __j; __i--) {
             std::construct_at(&_M_data[__i + __n - 1], std::move(_M_data[__i - 1]));
             std::destroy_at(&_M_data[__i - 1]);
         }
         _M_size += __n;
-        for (size_t __i = __j; __i != __j + __n; __i++) {
+        for (std::size_t __i = __j; __i != __j + __n; __i++) {
             std::construct_at(&_M_data[__i], *__first);
             ++__first;
         }
@@ -490,7 +491,7 @@ public:
     }
 
     ~Vector() noexcept {
-        for (size_t __i = 0; __i != _M_size; __i++) {
+        for (std::size_t __i = 0; __i != _M_size; __i++) {
             std::destroy_at(&_M_data[__i]);
         }
         if (_M_cap != 0) {

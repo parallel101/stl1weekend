@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <utility>
 #include <stdexcept>
@@ -67,6 +69,8 @@ struct Map
     using key_type = _Key;
     using mapped_type = _Mapped;
     using value_type = std::pair<_Key const, _Mapped>;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
 
 private:
     using _ValueComp = _RbTreeValueCompare<_Compare, value_type>;
@@ -337,6 +341,8 @@ struct MultiMap
     using key_type = _Key;
     using mapped_type = _Mapped;
     using value_type = std::pair<_Key const, _Mapped>;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
 
 private:
     using _ValueComp = _RbTreeValueCompare<_Compare, value_type>;

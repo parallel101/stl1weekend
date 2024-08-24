@@ -4,6 +4,7 @@
 #include <iterator>
 #include <memory>
 #include <limits>
+#include <algorithm>
 #include <utility>
 #include <initializer_list>
 #include "_Common.hpp"
@@ -38,8 +39,8 @@ template <class T, class Alloc = std::allocator<T>>
 struct List {
     using value_type = T;
     using allocator_type = Alloc;
-    using size_type = size_t;
-    using difference_type = ptrdiff_t;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
     using pointer = T *;
     using const_pointer = T const *;
     using reference = T &;
@@ -50,7 +51,7 @@ private:
     using AllocNode = std::allocator_traits<Alloc>::template rebind_alloc<ListValueNode<T>>;
 
     ListNode m_dummy;
-    size_t m_size;
+    std::size_t m_size;
     [[no_unique_address]] Alloc m_alloc;
 
     ListNode *newNode() {
@@ -208,12 +209,12 @@ private:
     }
 
 public:
-    size_t size() const noexcept {
+    std::size_t size() const noexcept {
         return m_size;
     }
 
-    static constexpr size_t max_size() noexcept {
-        return std::numeric_limits<size_t>::max();
+    static constexpr std::size_t max_size() noexcept {
+        return std::numeric_limits<std::size_t>::max();
     }
 
     template <std::input_iterator InputIt>
@@ -499,10 +500,10 @@ public:
         erase(std::prev(end()));
     }
 
-    size_t remove(T const &val) noexcept {
+    std::size_t remove(T const &val) noexcept {
         auto first = begin();
         auto last = begin();
-        size_t count = 0;
+        std::size_t count = 0;
         while (first != last) {
             if (*first == val) {
                 first = erase(first);
@@ -515,10 +516,10 @@ public:
     }
 
     template <class Pred>
-    size_t remove_if(Pred &&pred) noexcept {
+    std::size_t remove_if(Pred &&pred) noexcept {
         auto first = begin();
         auto last = begin();
-        size_t count = 0;
+        std::size_t count = 0;
         while (first != last) {
             if (pred(*first)) {
                 first = erase(first);
@@ -552,7 +553,7 @@ public:
         return emplace(pos, std::move(val));
     }
 
-    iterator insert(const_iterator pos, size_t n, T const &val) {
+    iterator insert(const_iterator pos, std::size_t n, T const &val) {
         auto orig = pos;
         bool had_orig = false;
         while (n) {

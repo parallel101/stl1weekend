@@ -27,6 +27,10 @@ private:
     friend struct UniquePtr;
 
 public:
+    using element_type = _Tp;
+    using pointer = _Tp *;
+    using deleter_type = _Tp;
+
     UniquePtr(std::nullptr_t = nullptr) noexcept : _M_p(nullptr) { // 默认构造函数
     }
 
@@ -60,12 +64,24 @@ public:
         return *this;
     }
 
-    void swap(UniquePtr &&__that) noexcept { // 交换函数
+    void swap(UniquePtr &__that) noexcept { // 交换函数
         std::swap(_M_p, __that._M_p);
     }
 
     _Tp *get() const noexcept {
         return _M_p;
+    }
+
+    _Tp *operator->() const noexcept {
+        return _M_p;
+    }
+
+    std::add_lvalue_reference_t<_Tp> operator*() const noexcept {
+        return *_M_p;
+    }
+
+    _Deleter *get_deleter() const noexcept {
+        return _M_deleter;
     }
 
     _Tp *release() noexcept {
@@ -80,36 +96,60 @@ public:
         _M_p = __p;
     }
 
-    _Tp &operator*() const noexcept {
-        return *_M_p;
+    explicit operator bool() const noexcept {
+        return _M_p != nullptr;
     }
 
-    _Tp *operator->() const noexcept {
-        return _M_p;
+    bool operator==(UniquePtr const &__that) const noexcept {
+        return _M_p == __that._M_p;
+    }
+
+    bool operator!=(UniquePtr const &__that) const noexcept {
+        return _M_p != __that._M_p;
+    }
+
+    bool operator<(UniquePtr const &__that) const noexcept {
+        return _M_p < __that._M_p;
+    }
+
+    bool operator<=(UniquePtr const &__that) const noexcept {
+        return _M_p <= __that._M_p;
+    }
+
+    bool operator>(UniquePtr const &__that) const noexcept {
+        return _M_p > __that._M_p;
+    }
+
+    bool operator>=(UniquePtr const &__that) const noexcept {
+        return _M_p >= __that._M_p;
     }
 };
 
 template <class _Tp, class _Deleter>
-struct UniquePtr<_Tp[], _Deleter> : UniquePtr<_Tp, _Deleter> {};
+struct UniquePtr<_Tp[], _Deleter> : UniquePtr<_Tp, _Deleter> {
+    using UniquePtr<_Tp, _Deleter>::UniquePtr;
 
-template <class _Tp, class ..._Args, std::enable_if_t<!std::is_unbounded_array_v<_Tp>>>
+    std::add_lvalue_reference_t<_Tp> operator[](std::size_t __i) {
+        return this->get()[__i];
+    }
+};
+
+template <class _Tp, class ..._Args, std::enable_if_t<!std::is_unbounded_array_v<_Tp>, int> = 0>
 UniquePtr<_Tp> makeUnique(_Args &&...__args) {
-    std::remove_extent_t<_Tp> a;
     return UniquePtr<_Tp>(new _Tp(std::forward<_Args>(__args)...));
 }
 
-template <class _Tp, std::enable_if_t<!std::is_unbounded_array_v<_Tp>>>
+template <class _Tp, std::enable_if_t<!std::is_unbounded_array_v<_Tp>, int> = 0>
 UniquePtr<_Tp> makeUniqueForOverwrite() {
     return UniquePtr<_Tp>(new _Tp);
 }
 
-template <class _Tp, class ..._Args, std::enable_if_t<std::is_unbounded_array_v<_Tp>>>
+template <class _Tp, class ..._Args, std::enable_if_t<std::is_unbounded_array_v<_Tp>, int> = 0>
 UniquePtr<_Tp> makeUnique(std::size_t __len) {
-    std::remove_extent_t<_Tp> a;
     return UniquePtr<_Tp>(new std::remove_extent_t<_Tp>[__len]());
 }
 
-template <class _Tp, std::enable_if_t<std::is_unbounded_array_v<_Tp>>>
+template <class _Tp, std::enable_if_t<std::is_unbounded_array_v<_Tp>, int> = 0>
 UniquePtr<_Tp> makeUniqueForOverwrite(std::size_t __len) {
     return UniquePtr<_Tp>(new std::remove_extent_t<_Tp>[__len]);
 }
