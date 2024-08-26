@@ -80,7 +80,7 @@ public:
         return *_M_p;
     }
 
-    _Deleter *get_deleter() const noexcept {
+    _Deleter get_deleter() const noexcept {
         return _M_deleter;
     }
 

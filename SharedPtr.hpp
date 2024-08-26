@@ -108,7 +108,7 @@ public:
     template <class _Yp, class _Deleter,
               std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
     explicit SharedPtr(UniquePtr<_Yp, _Deleter> &&__ptr)
-        : SharedPtr(__ptr.get(), __ptr.get_deleter()) {}
+        : SharedPtr(__ptr.release(), __ptr.get_deleter()) {}
 
     template <class _Yp>
     inline friend SharedPtr<_Yp>
