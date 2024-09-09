@@ -10,7 +10,7 @@
 
 相关文件：
 
-- [Function.hpp](Function.hpp)
+- [_Function.hpp](_Function.hpp)
 - [test_Function.cpp](test_Function.cpp)
 
 这是本系列试水的第一课，自己实现std::function容器。本期视频中我们从C语言传统函数指针的痛点入手，介绍了现代C++的仿函数思想，通过cppinsights.io这个在线工具解构了C++11 lambda语法糖的原理，最终，我们借助类型擦除思想，实现了和标准库一样的万能函数容器：std::function。
@@ -71,10 +71,21 @@
 
 相关文件：
 
-- [Map.hpp](Map.hpp)
-- [test_Map.cpp](test_Map.cpp)
-- [Set.hpp](Set.hpp)
-- [test_Set.cpp](test_Set.cpp)
 - [_RbTree.hpp](_RbTree.hpp)
+- [Map.hpp](Map.hpp)
+- [Set.hpp](Set.hpp)
+- [test_Map.cpp](test_Map.cpp)
+- [test_Set.cpp](test_Set.cpp)
 
 小彭老师C++实战演练系列之“自己实现所有STL容器”。比起艰深的STL源码解读，不如自己动手实现STL，更能生动直观地掌握底层技术细节，破除模棱两可心理，了解常见的最佳实践。这是本系列试水的第七课，自己实现std::map与std::set容器。本期视频中我们介绍了红黑树这种特殊的二叉搜索树如何维持平衡，实现一个可以存放任意类型的有序键值对并去重容器。由于红黑树需要判断的边缘情况多而杂，一不留神就会写错、写漏，可能是本系列有史以来最难的一集。尝试过程中遇到无数的bug，小彭老师不得不参考了许多实现，最终借助所学知识才实现出了能正确运作的红黑树 _RbTreeBase，并在其基础上实现了 Map 和 Set 容器。支持了自定义比较器和内存分配器，也支持了 MultiMap 和 MultiSet，封装出了和标准库一样的std::map与std::set接口，完美支持增删改查等常规操作。
+
+## 第八课：SharedPtr
+
+视频链接：[todo](https://www.bilibili.com/video/todo)
+
+相关文件：
+
+- [SharedPtr.hpp](SharedPtr.hpp)
+- [test_SharedPtr.cpp](test_SharedPtr.cpp)
+
+小彭老师C++实战演练系列之“自己实现所有STL容器”。比起艰深的STL源码解读，不如自己动手实现STL，更能生动直观地掌握底层技术细节，破除模棱两可心理，了解常见的最佳实践。这是本系列试水的第八课，自己实现std::shared_ptr智能指针。本期视频中我们介绍了如何借助引用计数器实现多个智能指针共享同一个资源，延长生命周期直到最后一份引用也已销毁才析构指向对象，并实现了自动释放资源的效果。通过实际操作，我们理解了为什么shared_ptr必须额外创建一个独立的管理块，也了解到make_shared合并内存分配的原理。介绍了shared_ptr将deleter类型擦除的优势，还看穿了shared_ptr所谓线程安全的实质：只有计数器是原子的。同时介绍了如何借助CRTP模板类std::enable_shared_from_this实现从this裸指针转换为shared_ptr智能指针的功能。最终，借助所学知识，实现了和标准库一样的共享型智能指针：std::shared_ptr。由于篇幅限制，暂时还没有实现weak_ptr和intrusive_ptr，以后有时间再来填坑。

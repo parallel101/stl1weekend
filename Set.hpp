@@ -1,8 +1,11 @@
 #pragma once
 
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <utility>
 #include "_RbTree.hpp"
+#include "_Common.hpp"
 
 template <class _Tp, class _Compare = std::less<_Tp>,
           class _Alloc = std::allocator<_Tp>>
@@ -11,6 +14,8 @@ struct Set : _RbTreeImpl<_Tp const, _Compare, _Alloc> {
     using typename _RbTreeImpl<_Tp const, _Compare, _Alloc>::node_type;
     using iterator = const_iterator;
     using value_type = _Tp;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
 
     Set() = default;
 
@@ -45,7 +50,7 @@ struct Set : _RbTreeImpl<_Tp const, _Compare, _Alloc> {
         return this->_M_comp;
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     const_iterator find(_Tp &&__value) const noexcept {
         return this->_M_find(__value);
     }
@@ -84,25 +89,25 @@ struct Set : _RbTreeImpl<_Tp const, _Compare, _Alloc> {
 
     using _RbTreeImpl<_Tp const, _Compare, _Alloc>::erase;
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
-    size_t erase(_Tv &&__value) {
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
+    std::size_t erase(_Tv &&__value) {
         return this->_M_single_erase(__value);
     }
 
-    size_t erase(_Tp const &__value) {
+    std::size_t erase(_Tp const &__value) {
         return this->_M_single_erase(__value);
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
-    size_t count(_Tv &&__value) const noexcept {
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
+    std::size_t count(_Tv &&__value) const noexcept {
         return this->_M_contains(__value) ? 1 : 0;
     }
 
-    size_t count(_Tp const &__value) const noexcept {
+    std::size_t count(_Tp const &__value) const noexcept {
         return this->_M_contains(__value) ? 1 : 0;
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     bool contains(_Tv &&__value) const noexcept {
         return this->_M_contains(__value);
     }
@@ -111,7 +116,7 @@ struct Set : _RbTreeImpl<_Tp const, _Compare, _Alloc> {
         return this->_M_contains(__value);
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     node_type extract(_Tv &&__value) {
         iterator __it = this->_M_find(__value);
         return __it != this->end() ? this->extract(__it) : node_type();
@@ -129,6 +134,9 @@ struct MultiSet : _RbTreeImpl<_Tp const, _Compare, _Alloc> {
     using typename _RbTreeImpl<_Tp const, _Compare, _Alloc>::const_iterator;
     using typename _RbTreeImpl<_Tp const, _Compare, _Alloc>::node_type;
     using iterator = const_iterator;
+    using value_type = _Tp;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
 
     MultiSet() = default;
 
@@ -164,7 +172,7 @@ struct MultiSet : _RbTreeImpl<_Tp const, _Compare, _Alloc> {
         return this->_M_comp;
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     const_iterator find(_Tp &&__value) const noexcept {
         return this->_M_find(__value);
     }
@@ -203,25 +211,25 @@ struct MultiSet : _RbTreeImpl<_Tp const, _Compare, _Alloc> {
 
     using _RbTreeImpl<_Tp const, _Compare, _Alloc>::erase;
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
-    size_t erase(_Tv &&__value) {
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
+    std::size_t erase(_Tv &&__value) {
         return this->_M_multi_erase(__value);
     }
 
-    size_t erase(_Tp const &__value) {
+    std::size_t erase(_Tp const &__value) {
         return this->_M_multi_erase(__value);
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
-    size_t count(_Tv &&__value) const noexcept {
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
+    std::size_t count(_Tv &&__value) const noexcept {
         return this->_M_multi_count(__value);
     }
 
-    size_t count(_Tp const &__value) const noexcept {
+    std::size_t count(_Tp const &__value) const noexcept {
         return this->_M_multi_count(__value);
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     bool contains(_Tv &&__value) const noexcept {
         return this->_M_contains(__value);
     }
@@ -230,7 +238,7 @@ struct MultiSet : _RbTreeImpl<_Tp const, _Compare, _Alloc> {
         return this->_M_contains(__value);
     }
 
-    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT(_Compare, _Tv, _Tp)>
+    template <class _Tv, _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     node_type extract(_Tv &&__value) {
         iterator __it = this->_M_find(__value);
         return __it != this->end() ? this->extract(__it) : node_type();

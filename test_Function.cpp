@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <iostream>
-#include "Function.hpp"
+#include "Functional.hpp"
 
 void func_hello(int i) {
     printf("#%d Hello\n", i);

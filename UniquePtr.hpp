@@ -1,118 +1,155 @@
 #pragma once
 
-#include <cstdio>
+#include <type_traits>
 #include <utility>
-//#include <concepts>
 
-template <class T>
+template <class _Tp>
 struct DefaultDeleter { // 默认使用 delete 释放内存
-    void operator()(T *p) const {
+    void operator()(_Tp *p) const {
         delete p;
     }
 };
 
-template <class T>
-struct DefaultDeleter<T[]> { // 偏特化
-    void operator()(T *p) const {
+template <class _Tp>
+struct DefaultDeleter<_Tp[]> { // 偏特化
+    void operator()(_Tp *p) const {
         delete[] p;
     }
 };
 
-//template <>
-//struct DefaultDeleter<FILE> { // 全特化
-//    void operator()(FILE *p) const {
-//        fclose(p);
-//    }
-//};
-
-template <class T, class U>
-T exchange(T &dst, U &&val) { // 同标准库的 std::exchange
-    T tmp = std::move(dst);
-    dst = std::forward<U>(val);
-    return tmp;
-}
-
-template <class T, class Deleter = DefaultDeleter<T>>
+template <class _Tp, class _Deleter = DefaultDeleter<_Tp>>
 struct UniquePtr {
 private:
-    T *m_p;
+    _Tp *_M_p;
+    [[no_unique_address]] _Deleter _M_deleter;
 
-    template <class U, class UDeleter>
+    template <class _Up, class _UDeleter>
     friend struct UniquePtr;
 
 public:
-    UniquePtr(std::nullptr_t dummy = nullptr) { // 默认构造函数
-        m_p = nullptr;
+    using element_type = _Tp;
+    using pointer = _Tp *;
+    using deleter_type = _Tp;
+
+    UniquePtr(std::nullptr_t = nullptr) noexcept : _M_p(nullptr) { // 默认构造函数
     }
 
-    explicit UniquePtr(T *p) { // 自定义构造函数
-        m_p = p;
+    explicit UniquePtr(_Tp *p) noexcept : _M_p(p) { // 自定义构造函数
     }
 
-#if __cpp_concepts >= 201907L
-    template <class U, class UDeleter> requires (std::convertible_to<U *, T *>) // 有 C++20 的写法
-#else
-    template <class U, class UDeleter, class = std::enable_if_t<std::is_convertible_v<U *, T *>>> // 没有 C++20 的写法
-#endif
-    UniquePtr(UniquePtr<U, UDeleter> &&that) {  // 从子类型U的智能指针转换到T类型的智能指针
-        m_p = exchange(that.m_p, nullptr);
+    template <class _Up, class _UDeleter, class = std::enable_if_t<std::is_convertible_v<_Up *, _Tp *>>> // 没有 C++20 的写法
+    // template <class _Up, class _UDeleter> requires (std::convertible_to<_Up *, _Tp *>) // 有 C++20 的写法
+    UniquePtr(UniquePtr<_Up, _UDeleter> &&__that) noexcept : _M_p(__that._M_p) {  // 从子类型_Up的智能指针转换到_Tp类型的智能指针
+        __that._M_p = nullptr;
     }
 
-    ~UniquePtr() { // 析构函数
-        if (m_p)
-            Deleter{}(m_p);
+    ~UniquePtr() noexcept { // 析构函数
+        if (_M_p)
+            _M_deleter(_M_p);
     }
 
-    // {{{
-    UniquePtr(UniquePtr const &that) = delete; // 拷贝构造函数
-    UniquePtr &operator=(UniquePtr const &that) = delete; // 拷贝赋值函数
+    UniquePtr(UniquePtr const &__that) = delete; // 拷贝构造函数
+    UniquePtr &operator=(UniquePtr const &__that) = delete; // 拷贝赋值函数
     
-    UniquePtr(UniquePtr &&that) { // 移动构造函数
-        m_p = exchange(that.m_p, nullptr);
+    UniquePtr(UniquePtr &&__that) noexcept : _M_p(__that._M_p) { // 移动构造函数
+        __that._M_p = nullptr;
     }
     
-    UniquePtr &operator=(UniquePtr &&that) { // 移动赋值函数
-        if (this != &that) [[likely]] {
-            if (m_p)
-                Deleter{}(m_p);
-            m_p = exchange(that.m_p, nullptr);
+    UniquePtr &operator=(UniquePtr &&__that) noexcept { // 移动赋值函数
+        if (this != &__that) [[likely]] {
+            if (_M_p)
+                _M_deleter(_M_p);
+            _M_p = exchange(__that._M_p, nullptr);
         }
         return *this;
     }
-    // }}}
 
-    T *get() const {
-        return m_p;
+    void swap(UniquePtr &__that) noexcept { // 交换函数
+        std::swap(_M_p, __that._M_p);
     }
 
-    T *release() {
-        return exchange(m_p, nullptr);
+    _Tp *get() const noexcept {
+        return _M_p;
     }
 
-    void reset(T *p = nullptr) {
-        if (m_p)
-            Deleter{}(m_p);
-        m_p = p;
+    _Tp *operator->() const noexcept {
+        return _M_p;
     }
 
-    T &operator*() const {
-        return *m_p;
+    std::add_lvalue_reference_t<_Tp> operator*() const noexcept {
+        return *_M_p;
     }
 
-    T *operator->() const {
-        return m_p;
+    _Deleter get_deleter() const noexcept {
+        return _M_deleter;
+    }
+
+    _Tp *release() noexcept {
+        _Tp *__p = _M_p;
+        _M_p = nullptr;
+        return __p;
+    }
+
+    void reset(_Tp *__p = nullptr) noexcept {
+        if (_M_p)
+            _M_deleter(_M_p);
+        _M_p = __p;
+    }
+
+    explicit operator bool() const noexcept {
+        return _M_p != nullptr;
+    }
+
+    bool operator==(UniquePtr const &__that) const noexcept {
+        return _M_p == __that._M_p;
+    }
+
+    bool operator!=(UniquePtr const &__that) const noexcept {
+        return _M_p != __that._M_p;
+    }
+
+    bool operator<(UniquePtr const &__that) const noexcept {
+        return _M_p < __that._M_p;
+    }
+
+    bool operator<=(UniquePtr const &__that) const noexcept {
+        return _M_p <= __that._M_p;
+    }
+
+    bool operator>(UniquePtr const &__that) const noexcept {
+        return _M_p > __that._M_p;
+    }
+
+    bool operator>=(UniquePtr const &__that) const noexcept {
+        return _M_p >= __that._M_p;
     }
 };
 
-template <class T, class Deleter>
-struct UniquePtr<T[], Deleter> : UniquePtr<T, Deleter> {};
+template <class _Tp, class _Deleter>
+struct UniquePtr<_Tp[], _Deleter> : UniquePtr<_Tp, _Deleter> {
+    using UniquePtr<_Tp, _Deleter>::UniquePtr;
 
-template <class T, class ...Args>
-UniquePtr<T> makeUnique(Args &&...args) {
-    return UniquePtr<T>(new T(std::forward<Args>(args)...));
+    std::add_lvalue_reference_t<_Tp> operator[](std::size_t __i) {
+        return this->get()[__i];
+    }
+};
+
+template <class _Tp, class ..._Args, std::enable_if_t<!std::is_unbounded_array_v<_Tp>, int> = 0>
+UniquePtr<_Tp> makeUnique(_Args &&...__args) {
+    return UniquePtr<_Tp>(new _Tp(std::forward<_Args>(__args)...));
 }
 
-template <class T>
-UniquePtr<T> makeUniqueForOverwrite() {
-    return UniquePtr<T>(new T);
+template <class _Tp, std::enable_if_t<!std::is_unbounded_array_v<_Tp>, int> = 0>
+UniquePtr<_Tp> makeUniqueForOverwrite() {
+    return UniquePtr<_Tp>(new _Tp);
+}
+
+template <class _Tp, class ..._Args, std::enable_if_t<std::is_unbounded_array_v<_Tp>, int> = 0>
+UniquePtr<_Tp> makeUnique(std::size_t __len) {
+    return UniquePtr<_Tp>(new std::remove_extent_t<_Tp>[__len]());
+}
+
+template <class _Tp, std::enable_if_t<std::is_unbounded_array_v<_Tp>, int> = 0>
+UniquePtr<_Tp> makeUniqueForOverwrite(std::size_t __len) {
+    return UniquePtr<_Tp>(new std::remove_extent_t<_Tp>[__len]);
 }
