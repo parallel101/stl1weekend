@@ -414,6 +414,7 @@ struct Vector {
 
     Vector &operator=(std::initializer_list<T> ilist) {
         assign(ilist.begin(), ilist.end());
+        return *this;
     }
 
     template <class ...Args>
