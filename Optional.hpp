@@ -1,6 +1,5 @@
 #pragma once
 
-#include <version>
 #include <exception>
 #include <initializer_list>
 #include <type_traits>
@@ -18,13 +17,13 @@ struct Nullopt {
     explicit Nullopt() = default;
 };
 
-inline constexpr Nullopt nullopt;
+constexpr Nullopt nullopt;
 
 struct InPlace {
     explicit InPlace() = default;
 };
 
-inline constexpr InPlace inPlace;
+constexpr InPlace inPlace;
 
 template <class T>
 struct Optional {
@@ -281,48 +280,66 @@ public:
     }
 
     template <class F>
-    auto and_then(F &&f) const & {
-        using RetType = std::remove_cv_t<std::remove_reference_t<decltype(f(m_value))>>;
+    auto and_then(F &&f) const &
+        -> typename std::remove_cv<
+            typename std::remove_reference<
+                decltype(f(m_value))>::type>::type {
         if (m_has_value) {
             return std::forward<F>(f)(m_value);
         } else {
-            return RetType{};
+            return typename std::remove_cv<
+            typename std::remove_reference<
+                decltype(f(m_value))>::type>::type{};
         }
     }
 
     template <class F>
-    auto and_then(F &&f) & {
-        using RetType = std::remove_cv_t<std::remove_reference_t<decltype(f(m_value))>>;
+    auto and_then(F &&f) &
+        -> typename std::remove_cv<
+            typename std::remove_reference<
+                decltype(f(m_value))>::type>::type {
         if (m_has_value) {
             return std::forward<F>(f)(m_value);
         } else {
-            return RetType{};
+            return typename std::remove_cv<
+            typename std::remove_reference<
+                decltype(f(m_value))>::type>::type{};
         }
     }
 
-#if __cplusplus > 201103L // C++14 才有 _t 和 _v
     template <class F>
-    auto and_then(F &&f) const && {
-        using RetType = std::remove_cv_t<std::remove_reference_t<decltype(f(std::move(m_value)))>>;
+    auto and_then(F &&f) const &&
+        -> typename std::remove_cv<
+            typename std::remove_reference<
+                decltype(f(std::move(m_value)))>::type>::type {
         if (m_has_value) {
             return std::forward<F>(f)(std::move(m_value));
         } else {
-            return RetType{};
+            return typename std::remove_cv<
+            typename std::remove_reference<
+                decltype(f(std::move(m_value)))>::type>::type{};
         }
     }
 
     template <class F>
-    auto and_then(F &&f) && {
-        using RetType = std::remove_cv_t<std::remove_reference_t<decltype(f(std::move(m_value)))>>;
+    auto and_then(F &&f) &&
+        -> typename std::remove_cv<
+            typename std::remove_reference<
+                decltype(f(std::move(m_value)))>::type>::type {
         if (m_has_value) {
             return std::forward<F>(f)(std::move(m_value));
         } else {
-            return RetType{};
+            return typename std::remove_cv<
+            typename std::remove_reference<
+                decltype(f(std::move(m_value)))>::type>::type{};
         }
     }
 
     template <class F>
-    auto transform(F &&f) const & -> Optional<std::remove_cv_t<std::remove_reference_t<decltype(f(m_value))>>> {
+    auto transform(F &&f) const &
+        -> Optional<typename std::remove_cv<
+            typename std::remove_reference<
+                decltype(f(m_value))>::type>::type> {
         if (m_has_value) {
             return std::forward<F>(f)(m_value);
         } else {
@@ -331,7 +348,10 @@ public:
     }
 
     template <class F>
-    auto transform(F &&f) & -> Optional<std::remove_cv_t<std::remove_reference_t<decltype(f(m_value))>>> {
+    auto transform(F &&f) &
+        -> Optional<typename std::remove_cv<
+            typename std::remove_reference<
+                decltype(f(m_value))>::type>::type> {
         if (m_has_value) {
             return std::forward<F>(f)(m_value);
         } else {
@@ -340,7 +360,10 @@ public:
     }
 
     template <class F>
-    auto transform(F &&f) const && -> Optional<std::remove_cv_t<std::remove_reference_t<decltype(f(std::move(m_value)))>>> {
+    auto transform(F &&f) const &&
+        -> Optional<typename std::remove_cv<
+            typename std::remove_reference<
+                decltype(f(std::move(m_value)))>::type>::type> {
         if (m_has_value) {
             return std::forward<F>(f)(std::move(m_value));
         } else {
@@ -349,7 +372,10 @@ public:
     }
 
     template <class F>
-    auto transform(F &&f) && -> Optional<std::remove_cv_t<std::remove_reference_t<decltype(f(std::move(m_value)))>>> {
+    auto transform(F &&f) &&
+        -> Optional<typename std::remove_cv<
+            typename std::remove_reference<
+                decltype(f(std::move(m_value)))>::type>::type> {
         if (m_has_value) {
             return std::forward<F>(f)(std::move(m_value));
         } else {
@@ -357,7 +383,7 @@ public:
         }
     }
 
-    template <class F, std::enable_if_t<std::is_copy_constructible_v<T>, int> = 0>
+    template <class F, typename std::enable_if<std::is_copy_constructible<T>::value, int>::type = 0>
     Optional or_else(F &&f) const & {
         if (m_has_value) {
             return *this;
@@ -366,7 +392,7 @@ public:
         }
     }
 
-    template <class F, std::enable_if_t<std::is_move_constructible_v<T>, int> = 0>
+    template <class F, typename std::enable_if<std::is_move_constructible<T>::value, int>::type = 0>
     Optional or_else(F &&f) && {
         if (m_has_value) {
             return std::move(*this);
@@ -374,7 +400,6 @@ public:
             return std::forward<F>(f)();
         }
     }
-#endif
 
     void swap(Optional &that) noexcept {
         if (m_has_value && that.m_has_value) {
