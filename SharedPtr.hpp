@@ -60,18 +60,19 @@ struct _SpCounterImplFused final : _SpCounter {
           _M_mem(__mem),
           _M_deleter(std::move(__deleter)) {}
 
-    ~_SpCounterImplFused() noexcept override {
+    ~_SpCounterImplFused() noexcept {
         _M_deleter(_M_ptr);
-#if __cpp_aligned_new
-        ::operator delete(
-            _M_mem, std::align_val_t(
-                        std::max(alignof(_Tp), alignof(_SpCounterImplFused))));
-#else
-        ::operator delete(_M_mem);
-#endif
     }
 
-    void operator delete(void *) noexcept {}
+    void operator delete(void *__mem) noexcept {
+#if __cpp_aligned_new
+        ::operator delete(
+            __mem, std::align_val_t(
+                        std::max(alignof(_Tp), alignof(_SpCounterImplFused))));
+#else
+        ::operator delete(__mem);
+#endif
+    }
 };
 
 template <class _Tp>
