@@ -61,7 +61,7 @@ private:
 
     void deleteNode(ListNode *node) noexcept {
         AllocNode allocNode{m_alloc};
-        std::allocator_traits<AllocNode>::deallocate(allocNode, static_cast<ListValueNode<T> *>(node));
+        std::allocator_traits<AllocNode>::deallocate(allocNode, static_cast<ListValueNode<T> *>(node), 1);
     }
 
 public:
