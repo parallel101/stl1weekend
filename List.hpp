@@ -114,8 +114,8 @@ public:
         assign(that.cbegin(), that.cend());
     }
 
-    bool empty() noexcept {
-        return m_dummy.m_prev == m_dummy.m_next;
+    bool empty() const noexcept {
+        return m_dummy.m_next == &m_dummy;
     }
 
     T &front() noexcept {
@@ -213,7 +213,7 @@ public:
         return m_size;
     }
 
-    static constexpr std::size_t max_size() noexcept {
+    constexpr std::size_t max_size() const noexcept {
         return std::numeric_limits<std::size_t>::max();
     }
 
