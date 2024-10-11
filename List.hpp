@@ -345,7 +345,7 @@ public:
 
         iterator operator--(int) noexcept { // iterator--
             auto tmp = *this;
-            ++*this;
+            --*this;
             return tmp;
         }
 
