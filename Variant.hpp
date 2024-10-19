@@ -1,6 +1,7 @@
 #pragma once
 
-template <class ...Ts>
-union Variant {
-    Ts ...m_members;
+template <class T1, class T2>
+struct Variant {
+    T1 value1;
+    T2 value2;
 };
