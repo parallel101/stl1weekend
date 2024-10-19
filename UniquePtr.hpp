@@ -29,7 +29,7 @@ private:
 public:
     using element_type = _Tp;
     using pointer = _Tp *;
-    using deleter_type = _Tp;
+    using deleter_type = _Deleter;
 
     UniquePtr(std::nullptr_t = nullptr) noexcept : _M_p(nullptr) { // 默认构造函数
     }

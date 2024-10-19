@@ -60,18 +60,19 @@ struct _SpCounterImplFused final : _SpCounter {
           _M_mem(__mem),
           _M_deleter(std::move(__deleter)) {}
 
-    ~_SpCounterImplFused() noexcept override {
+    ~_SpCounterImplFused() noexcept {
         _M_deleter(_M_ptr);
-#if __cpp_aligned_new
-        ::operator delete(
-            _M_mem, std::align_val_t(
-                        std::max(alignof(_Tp), alignof(_SpCounterImplFused))));
-#else
-        ::operator delete(_M_mem);
-#endif
     }
 
-    void operator delete(void *) noexcept {}
+    void operator delete(void *__mem) noexcept {
+#if __cpp_aligned_new
+        ::operator delete(
+            __mem, std::align_val_t(
+                        std::max(alignof(_Tp), alignof(_SpCounterImplFused))));
+#else
+        ::operator delete(__mem);
+#endif
+    }
 };
 
 template <class _Tp>
@@ -97,13 +98,17 @@ public:
               std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
     explicit SharedPtr(_Yp *__ptr)
         : _M_ptr(__ptr),
-          _M_owner(new _SpCounterImpl<_Yp, DefaultDeleter<_Yp>>(__ptr)) {}
+          _M_owner(new _SpCounterImpl<_Yp, DefaultDeleter<_Yp>>(__ptr)) {
+        _S_setupEnableSharedFromThis(_M_ptr, _M_owner);
+    }
 
     template <class _Yp, class _Deleter,
               std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
     explicit SharedPtr(_Yp *__ptr, _Deleter __deleter)
-        : _M_owner(
-              new _SpCounterImpl<_Yp, _Deleter>(__ptr, std::move(__deleter))) {}
+        : _M_ptr(__ptr),
+          _M_owner(new _SpCounterImpl<_Yp, _Deleter>(__ptr, std::move(__deleter))) {
+        _S_setupEnableSharedFromThis(_M_ptr, _M_owner);
+    }
 
     template <class _Yp, class _Deleter,
               std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
@@ -244,6 +249,7 @@ public:
         _M_owner = nullptr;
         _M_ptr = __ptr;
         _M_owner = new _SpCounterImpl<_Yp, DefaultDeleter<_Yp>>(__ptr);
+        _S_setupEnableSharedFromThis(_M_ptr, _M_owner);
     }
 
     template <class _Yp, class _Deleter>
@@ -254,8 +260,8 @@ public:
         _M_ptr = nullptr;
         _M_owner = nullptr;
         _M_ptr = __ptr;
-        _M_owner =
-            new _SpCounterImpl<_Yp, _Deleter>(__ptr, std::move(__deleter));
+        _M_owner = new _SpCounterImpl<_Yp, _Deleter>(__ptr, std::move(__deleter));
+        _S_setupEnableSharedFromThis(_M_ptr, _M_owner);
     }
 
     ~SharedPtr() noexcept {

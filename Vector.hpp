@@ -409,6 +409,7 @@ public:
 
     Vector &operator=(std::initializer_list<_Tp> __ilist) {
         assign(__ilist.begin(), __ilist.end());
+        return *this;
     }
 
     template <class ...Args>
