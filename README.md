@@ -81,7 +81,7 @@
 
 ## 第八课：SharedPtr
 
-视频链接：[todo](https://www.bilibili.com/video/todo)
+视频链接：[BV15eWZeuEsV](https://www.bilibili.com/video/BV15eWZeuEsV)
 
 相关文件：
 
@@ -89,3 +89,14 @@
 - [test_SharedPtr.cpp](test_SharedPtr.cpp)
 
 小彭老师C++实战演练系列之“自己实现所有STL容器”。比起艰深的STL源码解读，不如自己动手实现STL，更能生动直观地掌握底层技术细节，破除模棱两可心理，了解常见的最佳实践。这是本系列试水的第八课，自己实现std::shared_ptr智能指针。本期视频中我们介绍了如何借助引用计数器实现多个智能指针共享同一个资源，延长生命周期直到最后一份引用也已销毁才析构指向对象，并实现了自动释放资源的效果。通过实际操作，我们理解了为什么shared_ptr必须额外创建一个独立的管理块，也了解到make_shared合并内存分配的原理。介绍了shared_ptr将deleter类型擦除的优势，还看穿了shared_ptr所谓线程安全的实质：只有计数器是原子的。同时介绍了如何借助CRTP模板类std::enable_shared_from_this实现从this裸指针转换为shared_ptr智能指针的功能。最终，借助所学知识，实现了和标准库一样的共享型智能指针：std::shared_ptr。由于篇幅限制，暂时还没有实现weak_ptr和intrusive_ptr，以后有时间再来填坑。
+
+## 第九课：Variant
+
+视频链接：[BV1f3CXYtE4x](https://www.bilibili.com/video/BV1f3CXYtE4x)
+
+相关文件：
+
+- [Variant.hpp](Variant.hpp)
+- [test_Variant.cpp](test_Variant.cpp)
+
+小彭老师C++实战演练系列之“自己实现所有STL容器”。比起艰深的STL源码解读，不如自己动手实现STL，更能生动直观地掌握底层技术细节，破除模棱两可心理，了解常见的最佳实践。这是本系列试水的第九课，自己实现std::variant多态容器。本期视频中我们介绍了如何借助C++封装与不变量思想实现类型安全的union，利用placement-new实现就地构造，在同一块内存存储多个类型，并基于函数指针表跳转实现了O(1)复杂度的高效visit，并使用C++11模板变长参数包语法和折叠表达式实现任意数量类型的共同存储。通过实际操作，我们理解了为什么variant必须额外增加一个index字段，为什么标准库的get是全局函数而且需要恼人的模板参数，了解了模板函数的实例化机制如何赋能std::visit高效的静态分发，也了解到variant如何通过aligned_storage模仿union，让多个不同类型共用同一块内存的原理和好处。最终，借助所学知识，实现了和标准库一样的静态多态容器：std::variant及其相关函数。由于时间原因，暂时没有实现支持多参数的std::visit，决定留作回家作业，供学有余力的同学自己尝试实现。

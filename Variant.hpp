@@ -163,6 +163,7 @@ public:
 
     template <class Lambda>
     std::common_type<typename std::invoke_result<Lambda, Ts &>::type...>::type visit(Lambda &&lambda) {
+        // 由于时间原因，暂时没有实现支持多参数的std::visit，决定留作回家作业，供学有余力的同学自己尝试实现
         return visitors_table<Lambda>()[index()](m_union, std::forward<Lambda>(lambda));
     }
 

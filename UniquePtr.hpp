@@ -59,7 +59,7 @@ public:
         if (this != &__that) [[likely]] {
             if (_M_p)
                 _M_deleter(_M_p);
-            _M_p = exchange(__that._M_p, nullptr);
+            _M_p = std::exchange(__that._M_p, nullptr);
         }
         return *this;
     }
