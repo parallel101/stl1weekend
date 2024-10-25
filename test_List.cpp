@@ -31,4 +31,12 @@ int main() {
         printf("arr[%zd] = %d\n", i, val);
     }
     printf("arr.size() = %zd\n", arr.size());
+    arr2.erase(++arr2.begin(), arr2.end());
+    std::cout << std::boolalpha << "arr2.size() = " << arr2.size()
+              << ", arr2.empty() = " << arr2.empty() << '\n';
+    arr2.erase(arr2.begin());
+    std::cout << std::boolalpha << "arr2.size() = " << arr2.size()
+              << ", arr2.empty() = " << arr2.empty() << '\n';
+    List<int> arr3(3);
+    std::cout << arr3.size() << '\n';
 }

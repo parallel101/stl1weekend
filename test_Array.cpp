@@ -47,5 +47,9 @@ int main() {
     }
     std::cout << "front:" << a.front() << '\n';
     std::cout << "back:" << a.back() << '\n';
+    for (auto it = a.rbegin(); it != a.rend(); ++it) {
+        std::cout << *it << " ";
+    }
+    std::cout << '\n';
     return 0;
 }

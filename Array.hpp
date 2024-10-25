@@ -120,28 +120,28 @@ struct Array {
         return _M_elements + _N;
     }
 
-    std::reverse_iterator<_Tp const *> crbegin() const noexcept {
-        return std::make_reverse_iterator(_M_elements);
+    const_reverse_iterator crbegin() const noexcept {
+        return const_reverse_iterator(end());
     }
 
-    std::reverse_iterator<_Tp const *> crend() const noexcept {
-        return std::make_reverse_iterator(_M_elements + _N);
+    const_reverse_iterator crend() const noexcept {
+        return const_reverse_iterator(begin());
     }
 
-    std::reverse_iterator<_Tp const *> rbegin() const noexcept {
-        return std::make_reverse_iterator(_M_elements);
+    const_reverse_iterator rbegin() const noexcept {
+        return const_reverse_iterator(end());
     }
 
-    std::reverse_iterator<_Tp const *> rend() const noexcept {
-        return std::make_reverse_iterator(_M_elements + _N);
+    const_reverse_iterator rend() const noexcept {
+        return const_reverse_iterator(begin());
     }
 
-    std::reverse_iterator<_Tp *> rbegin() noexcept {
-        return std::make_reverse_iterator(_M_elements);
+    reverse_iterator rbegin() noexcept {
+        return reverse_iterator(end());
     }
 
-    std::reverse_iterator<_Tp *> rend() noexcept {
-        return std::make_reverse_iterator(_M_elements + _N);
+    reverse_iterator rend() noexcept {
+        return reverse_iterator(begin());
     }
 
     _LIBPENGCXX_DEFINE_COMPARISON(Array);
@@ -273,5 +273,5 @@ struct Array<_Tp, 0> {
 };
 
 
-template <class _Tp, class ..._Ts>
-Array(_Tp, _Ts...) -> Array<_Tp, 1 + sizeof...(_Ts)>;
+template <class _Tp, class ..._Ts> 
+Array(_Tp, _Ts...) -> Array<std::enable_if_t<(std::is_same_v<_Tp, _Ts> && ...), _Tp>, 1 + sizeof...(_Ts)>;

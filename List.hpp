@@ -61,7 +61,7 @@ private:
 
     void deleteNode(ListNode *node) noexcept {
         AllocNode allocNode{m_alloc};
-        std::allocator_traits<AllocNode>::deallocate(allocNode, static_cast<ListValueNode<T> *>(node));
+        std::allocator_traits<AllocNode>::deallocate(allocNode, static_cast<ListValueNode<T> *>(node), 1);
     }
 
 public:
@@ -114,8 +114,8 @@ public:
         assign(that.cbegin(), that.cend());
     }
 
-    bool empty() noexcept {
-        return m_dummy.m_prev == m_dummy.m_next;
+    bool empty() const noexcept {
+        return m_dummy.m_next == &m_dummy;
     }
 
     T &front() noexcept {
@@ -178,30 +178,16 @@ private:
         prev->m_next = &m_dummy;
     }
 
-    void _uninit_assign(size_t n, T const &val) {
+    template<typename... Args>
+    requires std::constructible_from<value_type, Args...>
+    void _uninit_assign(size_t n, Args&&... args) {
         ListNode *prev = &m_dummy;
-        while (n) {
+        for (size_t i = 0; i < n; ++i) {
             ListNode *node = newNode();
             prev->m_next = node;
             node->m_prev = prev;
-            std::construct_at(&node->value(), val);
+            std::construct_at(&node->value(), std::forward<Args>(args)...);
             prev = node;
-            --n;
-        }
-        m_dummy.m_prev = prev;
-        prev->m_next = &m_dummy;
-        m_size = n;
-    }
-
-    void _uninit_assign(size_t n) {
-        ListNode *prev = &m_dummy;
-        while (n) {
-            ListNode *node = newNode();
-            prev->m_next = node;
-            node->m_prev = prev;
-            std::construct_at(&node->value());
-            prev = node;
-            --n;
         }
         m_dummy.m_prev = prev;
         prev->m_next = &m_dummy;
@@ -213,7 +199,7 @@ public:
         return m_size;
     }
 
-    static constexpr std::size_t max_size() noexcept {
+    constexpr std::size_t max_size() const noexcept {
         return std::numeric_limits<std::size_t>::max();
     }
 
@@ -345,7 +331,7 @@ public:
 
         iterator operator--(int) noexcept { // iterator--
             auto tmp = *this;
-            ++*this;
+            --*this;
             return tmp;
         }
 
