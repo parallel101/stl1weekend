@@ -58,7 +58,7 @@ public:
                                         && std::is_copy_constructible_v<_Fn> 
                                         && !std::is_same_v<std::decay_t<_Fn>, Function<_Ret(_Args...)>> >>
     Function(_Fn &&__f) // 没有 explicit，允许 lambda 表达式隐式转换成 Function
-    : _M_base(std::make_unique<_FuncImpl<std::decay_t<_Fn>>>(std::in_place, std::move(__f)))
+    : _M_base(std::make_unique<_FuncImpl<std::decay_t<_Fn>>>(std::in_place, std::forward<_Fn>(__f)))
     {}
 
     Function(Function &&) = default;
