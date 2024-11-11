@@ -144,7 +144,7 @@ UniquePtr<_Tp> makeUniqueForOverwrite() {
     return UniquePtr<_Tp>(new _Tp);
 }
 
-template <class _Tp, class ..._Args, std::enable_if_t<std::is_unbounded_array_v<_Tp>, int> = 0>
+template <class _Tp, std::enable_if_t<std::is_unbounded_array_v<_Tp>, int> = 0>
 UniquePtr<_Tp> makeUnique(std::size_t __len) {
     return UniquePtr<_Tp>(new std::remove_extent_t<_Tp>[__len]());
 }
