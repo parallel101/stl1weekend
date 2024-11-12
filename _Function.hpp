@@ -54,20 +54,22 @@ public:
 
     // 此处 enable_if_t 的作用：阻止 Function 从不可调用的对象中初始化
     // 另外标准要求 Function 还需要函数对象额外支持拷贝（用于 _M_clone）
-    template <class _Fn, class = std::enable_if_t<std::is_invocable_r_v<_Ret, std::decay_t<_Fn>, _Args...> && std::is_copy_constructible_v<_Fn>>>
+    template <class _Fn, class = std::enable_if_t<std::is_invocable_r_v<_Ret, std::decay_t<_Fn>, _Args...> 
+                                        && std::is_copy_constructible_v<_Fn> 
+                                        && !std::is_same_v<std::decay_t<_Fn>, Function<_Ret(_Args...)>> >>
     Function(_Fn &&__f) // 没有 explicit，允许 lambda 表达式隐式转换成 Function
-    : _M_base(std::make_unique<_FuncImpl<std::decay_t<_Fn>>>(std::in_place, std::move(__f)))
+    : _M_base(std::make_unique<_FuncImpl<std::decay_t<_Fn>>>(std::in_place, std::forward<_Fn>(__f)))
     {}
 
     Function(Function &&) = default;
     Function &operator=(Function &&) = default;
 
-    Function(Function const &__that) : _M_base(__that._M_base ? __that._M_base->clone() : nullptr) {
+    Function(Function const &__that) : _M_base(__that._M_base ? __that._M_base->_M_clone() : nullptr) {
     }
 
     Function &operator=(Function const &__that) {
         if (__that._M_base)
-            _M_base = __that._M_base->clone();
+            _M_base = __that._M_base->_M_clone();
         else
             _M_base = nullptr;
     }

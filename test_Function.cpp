@@ -28,5 +28,14 @@ int main() {
     func_printnum_t func_printnum{x, y};
     repeattwice(func_printnum);
     repeattwice(func_hello);
+
+    Function<void(int)> f{[](int i) {
+        printf("i = %d\n", i);
+    }};
+
+    f(2);
+    auto ff = f;
+    ff(3);
+
     return 0;
 }
