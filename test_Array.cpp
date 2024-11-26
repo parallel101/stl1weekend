@@ -51,5 +51,10 @@ int main() {
         std::cout << *it << " ";
     }
     std::cout << '\n';
+    auto b = Array{0 , 1 , 2};
+    std::swap(a , b);
+    for (auto &ai: a) {
+        std::cout << ai << '\n';
+    }
     return 0;
 }

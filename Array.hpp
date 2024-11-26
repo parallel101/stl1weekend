@@ -24,21 +24,21 @@ struct Array {
 
     _Tp _M_elements[_N];
 
-    _Tp &operator[](size_t __i) noexcept {
+    constexpr _Tp &operator[](size_t __i) noexcept {
         return _M_elements[__i];
     }
 
-    _Tp const &operator[](size_t __i) const noexcept {
+    constexpr _Tp const &operator[](size_t __i) const noexcept {
         return _M_elements[__i];
     }
 
-    _Tp &at(size_t __i) {
+    constexpr _Tp &at(size_t __i) {
         if (__i >= _N) [[__unlikely__]]
             throw std::out_of_range("array::at");
         return _M_elements[__i];
     }
 
-    _Tp const &at(size_t __i) const {
+    constexpr _Tp const &at(size_t __i) const {
         if (__i >= _N) [[__unlikely__]]
             throw std::out_of_range("array::at");
         return _M_elements[__i];
@@ -56,19 +56,19 @@ struct Array {
         }
     }
 
-    _Tp &front() noexcept {
+    constexpr _Tp &front() noexcept {
         return _M_elements[0];
     }
 
-    _Tp const &front() const noexcept {
+    constexpr _Tp const &front() const noexcept {
         return _M_elements[0];
     }
 
-    _Tp &back() noexcept {
+    constexpr _Tp &back() noexcept {
         return _M_elements[_N - 1];
     }
 
-    _Tp const &back() const noexcept {
+    constexpr _Tp const &back() const noexcept {
         return _M_elements[_N - 1];
     }
 
@@ -84,67 +84,71 @@ struct Array {
         return _N;
     }
 
-    _Tp const *cdata() const noexcept {
+    constexpr _Tp const *cdata() const noexcept {
         return _M_elements;
     }
 
-    _Tp const *data() const noexcept {
+    constexpr _Tp const *data() const noexcept {
         return _M_elements;
     }
 
-    _Tp *data() noexcept {
+    constexpr _Tp *data() noexcept {
         return _M_elements;
     }
 
-    _Tp const *cbegin() const noexcept {
+    constexpr _Tp const *cbegin() const noexcept {
         return _M_elements;
     }
 
-    _Tp const *cend() const noexcept {
+    constexpr _Tp const *cend() const noexcept {
         return _M_elements + _N;
     }
 
-    _Tp const *begin() const noexcept {
+    constexpr _Tp const *begin() const noexcept {
         return _M_elements;
     }
 
-    _Tp const *end() const noexcept {
+    constexpr _Tp const *end() const noexcept {
         return _M_elements + _N;
     }
 
-    _Tp *begin() noexcept {
+    constexpr  _Tp *begin() noexcept {
         return _M_elements;
     }
 
-    _Tp *end() noexcept {
+    constexpr _Tp *end() noexcept {
         return _M_elements + _N;
     }
 
-    const_reverse_iterator crbegin() const noexcept {
+    constexpr const_reverse_iterator crbegin() const noexcept {
         return const_reverse_iterator(end());
     }
 
-    const_reverse_iterator crend() const noexcept {
+    constexpr const_reverse_iterator crend() const noexcept {
         return const_reverse_iterator(begin());
     }
 
-    const_reverse_iterator rbegin() const noexcept {
+    constexpr const_reverse_iterator rbegin() const noexcept {
         return const_reverse_iterator(end());
     }
 
-    const_reverse_iterator rend() const noexcept {
+    constexpr const_reverse_iterator rend() const noexcept {
         return const_reverse_iterator(begin());
     }
 
-    reverse_iterator rbegin() noexcept {
+    constexpr reverse_iterator rbegin() noexcept {
         return reverse_iterator(end());
     }
 
-    reverse_iterator rend() noexcept {
+    constexpr reverse_iterator rend() noexcept {
         return reverse_iterator(begin());
     }
 
     _LIBPENGCXX_DEFINE_COMPARISON(Array);
+    
+    friend void swap(Array<_Tp, _N>& lhs ,Array<_Tp, _N>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
+        lhs.swap(rhs);
+    }
 };
 
 template <class _Tp>
@@ -159,19 +163,19 @@ struct Array<_Tp, 0> {
     using reverse_iterator = _Tp *;
     using const_reverse_iterator = _Tp const *;
 
-    _Tp &operator[](size_t __i) noexcept {
+    constexpr _Tp &operator[](size_t __i) noexcept {
         _LIBPENGCXX_UNREACHABLE();
     }
 
-    _Tp const &operator[](size_t __i) const noexcept {
+    constexpr _Tp const &operator[](size_t __i) const noexcept {
         _LIBPENGCXX_UNREACHABLE();
     }
 
-    _Tp &at(size_t __i) {
+    constexpr _Tp &at(size_t __i) {
         throw std::out_of_range("array::at");
     }
 
-    _Tp const &at(size_t __i) const {
+    constexpr _Tp const &at(size_t __i) const {
         throw std::out_of_range("array::at");
     }
 
@@ -181,19 +185,19 @@ struct Array<_Tp, 0> {
     void swap(Array &) noexcept {
     }
 
-    _Tp &front() noexcept {
+    constexpr _Tp &front() noexcept {
         _LIBPENGCXX_UNREACHABLE();
     }
 
-    _Tp const &front() const noexcept {
+    constexpr _Tp const &front() const noexcept {
         _LIBPENGCXX_UNREACHABLE();
     }
 
-    _Tp &back() noexcept {
+    constexpr _Tp &back() noexcept {
         _LIBPENGCXX_UNREACHABLE();
     }
 
-    _Tp const &back() const noexcept {
+    constexpr _Tp const &back() const noexcept {
         _LIBPENGCXX_UNREACHABLE();
     }
 
@@ -209,67 +213,70 @@ struct Array<_Tp, 0> {
         return 0;
     }
 
-    _Tp const *cdata() const noexcept {
+    constexpr _Tp const *cdata() const noexcept {
         return nullptr;
     }
 
-    _Tp const *data() const noexcept {
+    constexpr _Tp const *data() const noexcept {
         return nullptr;
     }
 
-    _Tp *data() noexcept {
+    constexpr _Tp *data() noexcept {
         return nullptr;
     }
 
-    _Tp const *cbegin() const noexcept {
+    constexpr _Tp const *cbegin() const noexcept {
         return nullptr;
     }
 
-    _Tp const *cend() const noexcept {
+    constexpr _Tp const *cend() const noexcept {
         return nullptr;
     }
 
-    _Tp const *begin() const noexcept {
+    constexpr _Tp const *begin() const noexcept {
         return nullptr;
     }
 
-    _Tp const *end() const noexcept {
+    constexpr _Tp const *end() const noexcept {
         return nullptr;
     }
 
-    _Tp *begin() noexcept {
+    constexpr _Tp *begin() noexcept {
         return nullptr;
     }
 
-    _Tp *end() noexcept {
+    constexpr _Tp *end() noexcept {
         return nullptr;
     }
 
-    _Tp const *crbegin() const noexcept {
+    constexpr _Tp const *crbegin() const noexcept {
         return nullptr;
     }
 
-    _Tp const *crend() const noexcept {
+    constexpr _Tp const *crend() const noexcept {
         return nullptr;
     }
 
-    _Tp const *rbegin() const noexcept {
+    constexpr _Tp const *rbegin() const noexcept {
         return nullptr;
     }
 
-    _Tp const *rend() const noexcept {
+    constexpr _Tp const *rend() const noexcept {
         return nullptr;
     }
 
-    _Tp *rbegin() noexcept {
+    constexpr _Tp *rbegin() noexcept {
         return nullptr;
     }
 
-    _Tp *rend() noexcept {
+    constexpr _Tp *rend() noexcept {
         return nullptr;
     }
 
     _LIBPENGCXX_DEFINE_COMPARISON(Array);
+    
+    friend void swap(Array<_Tp, 0>& lhs ,Array<_Tp, 0>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
+    }
 };
 
 
