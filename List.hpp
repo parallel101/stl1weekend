@@ -488,7 +488,7 @@ public:
 
     std::size_t remove(T const &val) noexcept {
         auto first = begin();
-        auto last = begin();
+        auto last = end();
         std::size_t count = 0;
         while (first != last) {
             if (*first == val) {
@@ -504,7 +504,7 @@ public:
     template <class Pred>
     std::size_t remove_if(Pred &&pred) noexcept {
         auto first = begin();
-        auto last = begin();
+        auto last = end();
         std::size_t count = 0;
         while (first != last) {
             if (pred(*first)) {
